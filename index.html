@@ -271,71 +271,145 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             `;
             // ============================================================
 
-            statusDiv.innerText = "ELABORAZIONE...";
-            img.style.filter = "grayscale(100%)";
-            inputField.value = "";
-
-            try {
-                const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: MODEL_NAME,
-                        prompt: question, 
-                        system: SYSTEM_INSTRUCTION,
-                        stream: false,
-                        keep_alive: -1,
-                        options: {
-                            temperature: 0,
-                            num_predict: 600,
-                            seed: 123,      
-                            num_ctx: 4096   
-                        }
-                    })
-                });
-                
-                if (!response.ok) throw new Error("Errore Network");
-                const data = await response.json();
-                
-                let rawText = data.response;
-            
-                // 1. Cancella specificamente gli asterischi in ogni forma
-                let cleanText = rawText.replace(/\*/g, ""); 
-                
-                // 2. Cancella cancelletti, underscore e markdown vari
-                cleanText = cleanText.replace(/[#_`~]/g, "");
+            const statusDiv = document.getElementById('status');
+    const img = document.getElementById('avatar');
+    const inputField = document.getElementById('chat-input');
+    const synth = window.speechSynthesis;
     
-                // 3. Sistema la punteggiatura (A capo -> Punto)
-                cleanText = cleanText.replace(/\n/g, ". ");
-                
-                // 4. Toglie "Sono NAIA"
-                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
-                
-                img.style.filter = "none";
-                speak(data.response);
+    // --- 1. GESTIONE VOCE (Cerca Donna) ---
+    function getFemaleVoice() {
+        const voices = synth.getVoices();
+        // Cerca voci femminili note o italiane generiche
+        return voices.find(v => v.lang.includes("it") && (v.name.includes("Google") || v.name.includes("Alice") || v.name.includes("Elsa")))
+            || voices.find(v => v.lang.includes("it"));
+    }
 
-            } catch (error) {
-                console.error(error);
-                img.style.filter = "none";
-                statusDiv.innerText = "ERRORE DI RETE";
-                alert("Errore di connessione. Controlla Ngrok!");
-            }
+    // Carica voci in background
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => { console.log("Voci caricate"); };
+    }
+
+    // --- 2. MICROFONO ---
+    function startDictation() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) { alert("Usa Chrome."); return; }
+        
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'it-IT';
+        recognition.interimResults = false;
+
+        recognition.onstart = () => { 
+            statusDiv.innerText = "TI ASCOLTO...";
+            if(synth.speaking) synth.cancel();
+        };
+
+        recognition.onend = () => { 
+            if(inputField.value.trim().length > 0) sendToBrain(); 
+            else statusDiv.innerText = "NAIA PRONTA";
+        };
+
+        recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; };
+        try { recognition.start(); } catch(e) { console.log(e); }
+    }
+
+    // --- 3. CERVELLO + SPAZZINO (Il cuore della modifica) ---
+    async function sendToBrain() {
+        const text = inputField.value;
+        if (!text) return;
+
+        statusDiv.innerText = "PENSO...";
+        if(img) img.style.filter = "grayscale(100%)";
+        inputField.value = "";
+
+        try {
+            const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: MODEL_NAME,
+                    prompt: text,
+                    system: DATI_SCUOLA,
+                    stream: false,
+                    keep_alive: -1,
+                    options: { temperature: 0.1, num_predict: 250 }
+                })
+            });
+
+            if (!response.ok) throw new Error("Errore Network");
+            const data = await response.json();
+
+            let clean = data.response;
+
+            // === 📧 1. PROTEZIONE EMAIL (Il trucco nuovo) ===
+            // Cerca cose che sembrano email e trasforma i simboli in parole
+            // Esempio: "info@scuola.it" diventa "info chiocciola scuola punto it"
+            clean = clean.replace(/([a-zA-Z0-9._-]+)@([a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
+            });
+
+            // === 🧹 2. SPAZZINO MARKDOWN (Toglie gli asterischi) ===
+            // Toglie asterischi (*), cancelletti (#), trattini bassi (_) e accenti strani (`)
+            // NOTA: Non togliamo più il punto (.) qui, perché serve per la punteggiatura normale
+            clean = clean.replace(/[\*\#\_\`]/g, ""); 
+
+            // === ⏸️ 3. GESTIONE PAUSE ===
+            // Trasforma gli "a capo" in pause
+            clean = clean.replace(/\n/g, ". ");
+            
+            // Toglie spazi doppi
+            clean = clean.replace(/\s\s+/g, " ");
+
+            console.log("Testo pronto per la voce:", clean);
+            
+            if(img) img.style.filter = "none";
+            speak(clean);
+
+        } catch (error) {
+            console.error(error);
+            statusDiv.innerText = "ERRORE";
+            if(img) img.style.filter = "none";
         }
-        document.getElementById("chat-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
+    }
+            
+    // --- 4. PARLATO NATURALE ---
+    function speak(text) {
+        if (synth.speaking) synth.cancel();
+        
+        // Spezza le frasi ai punti per respirare
+        const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
+        playSequence(sentences, 0);
+    }
+
+    function playSequence(sentences, index) {
+        if (index >= sentences.length) {
+            statusDiv.innerText = "NAIA PRONTA";
+            if(img) { img.classList.remove('speaking'); img.classList.add('idle'); }
+            return;
+        }
+
+        // Pulisce ulteriormente la frase corrente
+        const sentenceClean = sentences[index].trim();
+        if(sentenceClean.length < 2) { playSequence(sentences, index + 1); return; }
+
+        const utterance = new SpeechSynthesisUtterance(sentenceClean);
+        utterance.voice = getFemaleVoice(); // Usa la funzione cerca-donna
+        utterance.lang = 'it-IT';
+        
+        // PARAMETRI PER SEMBRARE MENO ROBOT
+        utterance.rate = 1.0;  // Velocità normale (non correre)
+        utterance.pitch = 1.1; // Leggermente più acuta (femminile)
+
+        utterance.onstart = () => {
+            if(img) { img.classList.remove('idle'); img.classList.add('speaking'); }
+            statusDiv.innerText = "NAIA PARLA...";
+        };
+
+        utterance.onend = () => { playSequence(sentences, index + 1); };
+        utterance.onerror = () => { playSequence(sentences, index + 1); };
+
+        synth.speak(utterance);
+    }
     </script>
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
