@@ -299,13 +299,19 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 if (!response.ok) throw new Error("Errore Network");
                 const data = await response.json();
                 
-                let cleanText = data.response
-                                    .replace(/\*/g, "")       // Cancella TUTTI gli asterischi
-                                    .replace(/#/g, "")        // Cancella i cancelletti
-                                    .replace(/["']/g, "")     // Cancella le virgolette (a volte confondono la voce)
-                                    .replace(/\n/g, ". ")     // Trasforma "A Capo" in un PUNTO (così fa la pausa!)
-                                    .replace(/Sono NAIA,?/gi, "") 
-                                    .trim();
+                let rawText = data.response;
+            
+                // 1. Cancella specificamente gli asterischi in ogni forma
+                let cleanText = rawText.replace(/\*/g, ""); 
+                
+                // 2. Cancella cancelletti, underscore e markdown vari
+                cleanText = cleanText.replace(/[#_`~]/g, "");
+    
+                // 3. Sistema la punteggiatura (A capo -> Punto)
+                cleanText = cleanText.replace(/\n/g, ". ");
+                
+                // 4. Toglie "Sono NAIA"
+                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
                 
                 img.style.filter = "none";
                 speak(data.response);
@@ -322,6 +328,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
