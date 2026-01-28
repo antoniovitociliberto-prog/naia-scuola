@@ -76,53 +76,73 @@
 
         let speechQueue = []; // Coda delle frasi da dire
 
+       // Funzione Parlante (Versione Sicura con Voce Google)
         function speak(text) {
-            // 1. Ferma eventuali discorsi precedenti
-            if (synth.speaking) synth.cancel();
-            
-            // 2. Spezza il testo ogni volta che trova un punto, punto e virgola o esclamativo
-            // Così il telefono respira e non taglia l'audio.
-            const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
+        // Zittisce se stava già parlando
+        if (synth.speaking) synth.cancel();
+        
+        // 1. CERCA LA VOCE MIGLIORE AL VOLO (Senza crashare)
+        const allVoices = synth.getVoices();
+        const myVoice = allVoices.find(v => v.lang.includes("it") && v.name.includes("Google")) 
+                     || allVoices.find(v => v.lang.includes("it") && v.name.includes("Alice"))
+                     || allVoices.find(v => v.lang.includes("it") && v.name.includes("Elsa"))
+                     || allVoices.find(v => v.lang.includes("it")); // Mal che vada, la prima italiana
 
-            // 3. Prepara la prima frase e avvia la catena
-            playNextSentence(sentences, 0);
-        }
+        // 2. PREPARA LE FRASI (Tecnica Salame anti-taglio)
+        const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
 
-        function playNextSentence(sentences, index) {
-            if (index >= sentences.length) {
-                // Finito tutto il discorso
+        // 3. AVVIA IL DISCORSO PASSANDO LA VOCE TROVATA
+        playNextSentence(sentences, 0, myVoice);
+    }
+
+    function playNextSentence(sentences, index, voiceObj) {
+        if (index >= sentences.length) {
+            // Finito di parlare
+            if(typeof statusDiv !== 'undefined') statusDiv.innerText = "IN ASCOLTO";
+            if(typeof img !== 'undefined') {
                 img.classList.remove('speaking');
                 img.classList.add('idle');
-                statusDiv.innerText = "IN ASCOLTO";
-                return;
             }
-
-            const utterance = new SpeechSynthesisUtterance(sentences[index].trim());
-            utterance.lang = 'it-IT';
-            utterance.rate = 1.1; // Velocità normale
-            utterance.pitch = 1.0; 
-
-            // Animazione quando inizia questa frase specifica
-            utterance.onstart = () => {
-                img.classList.remove('idle');
-                img.classList.add('speaking');
-                statusDiv.innerText = "NAIA PARLA...";
-            };
-
-            // Quando finisce questa frase, passa alla prossima
-            utterance.onend = () => {
-                playNextSentence(sentences, index + 1);
-            };
-
-            // Errore? Passa comunque alla prossima
-            utterance.onerror = () => {
-                console.log("Errore audio, salto frase");
-                playNextSentence(sentences, index + 1);
-            };
-
-            synth.speak(utterance);
+            return;
         }
 
+        const textToSay = sentences[index].trim();
+        if(!textToSay) {
+            playNextSentence(sentences, index + 1, voiceObj);
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(textToSay);
+        
+        // APPLICA LA VOCE (Se esiste)
+        if (voiceObj) {
+            utterance.voice = voiceObj;
+        }
+        
+        utterance.lang = 'it-IT';
+        utterance.rate = 1.1; // Leggermente più veloce
+        utterance.pitch = 1.0;
+
+        utterance.onstart = () => {
+            if(typeof img !== 'undefined') {
+                img.classList.remove('idle');
+                img.classList.add('speaking');
+            }
+            if(typeof statusDiv !== 'undefined') statusDiv.innerText = "NAIA PARLA...";
+        };
+
+        utterance.onend = () => {
+            playNextSentence(sentences, index + 1, voiceObj);
+        };
+
+        utterance.onerror = () => {
+            console.log("Errore audio, passo alla prossima");
+            playNextSentence(sentences, index + 1, voiceObj);
+        };
+
+        synth.speak(utterance);
+    }
+        
         function startDictation() {
             const btnMic = document.getElementById('btn-mic');
             const inputField = document.getElementById('chat-input');
@@ -296,3 +316,4 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
