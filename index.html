@@ -265,6 +265,7 @@ A: Non risulta presente un convitto interno gestito direttamente dalla scuola. G
 Q: Accettate pagamenti in contanti?
 A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA.
 
+
                 
                 Domanda dell'utente: ${question}
             `;
@@ -298,13 +299,21 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 if (!response.ok) throw new Error("Errore Network");
                 const data = await response.json();
                 
+                let cleanText = data.response
+                                    .replace(/\*/g, "")       // Cancella TUTTI gli asterischi
+                                    .replace(/#/g, "")        // Cancella i cancelletti
+                                    .replace(/["']/g, "")     // Cancella le virgolette (a volte confondono la voce)
+                                    .replace(/\n/g, ". ")     // Trasforma "A Capo" in un PUNTO (così fa la pausa!)
+                                    .replace(/Sono NAIA,?/gi, "") 
+                                    .trim();
+                
                 img.style.filter = "none";
                 speak(data.response);
 
             } catch (error) {
                 console.error(error);
                 img.style.filter = "none";
-                statusDiv.innerText = "ERRORE";
+                statusDiv.innerText = "ERRORE DI RETE";
                 alert("Errore di connessione. Controlla Ngrok!");
             }
         }
@@ -313,6 +322,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
