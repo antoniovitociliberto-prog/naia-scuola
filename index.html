@@ -61,12 +61,10 @@
     </div>
 
     <script>
-        // ==========================================
-        // INCOLLA IL LINK NGROK QUI SOTTO (TRA LE VIRGOLETTE)
-        // ==========================================
+        
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
-        // ==========================================
+
         let voices = [];
         let bestVoice = null;
 
@@ -74,85 +72,74 @@
         const statusDiv = document.getElementById('status');
         const synth = window.speechSynthesis;
 
-        let speechQueue = []; // Coda delle frasi da dire
+        let speechQueue = []; 
 
-       // Funzione Parlante (Versione Sicura con Voce Google)
-        // Funzione Parlante (Forza Voce Femminile)
-    function speak(text) {
-        if (synth.speaking) synth.cancel();
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
 
-        // 1. RECUPERA TUTTE LE VOCI
-        const allVoices = synth.getVoices();
+            const allVoices = synth.getVoices();
+
+            const itVoices = allVoices.filter(v => v.lang.includes("it"));
         
-        // 2. CERCA UNA DONNA ITALIANA
-        // Filtra solo le voci italiane
-        const itVoices = allVoices.filter(v => v.lang.includes("it"));
+            const femaleVoice = itVoices.find(v => v.name.includes("Google")) 
+                             || itVoices.find(v => v.name.includes("Elsa")) 
+                             || itVoices.find(v => v.name.includes("Alice"))
+                             || itVoices.find(v => v.name.includes("Federica"))
+                             || itVoices[0]; // Se non trova donne, usa la prima italiana che capita
+
+            const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
+
         
-        // Cerca nell'ordine: 
-        // - Google (Android/Chrome - Femminile di solito)
-        // - Elsa (Windows - Femminile)
-        // - Alice (iPhone/Mac - Femminile)
-        // - Federica (Mac vecchi - Femminile)
-        const femaleVoice = itVoices.find(v => v.name.includes("Google")) 
-                         || itVoices.find(v => v.name.includes("Elsa")) 
-                         || itVoices.find(v => v.name.includes("Alice"))
-                         || itVoices.find(v => v.name.includes("Federica"))
-                         || itVoices[0]; // Se non trova donne, usa la prima italiana che capita
+            playNextSentence(sentences, 0, femaleVoice);
+        }
 
-        // 3. PREPARA LE FRASI
-        const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
-
-        // 4. PASSA LA VOCE TROVATA
-        playNextSentence(sentences, 0, femaleVoice);
-    }
-
-    function playNextSentence(sentences, index, voiceObj) {
+        function playNextSentence(sentences, index, voiceObj) {
         if (index >= sentences.length) {
-            // Finito di parlare
-            if(typeof statusDiv !== 'undefined') statusDiv.innerText = "IN ASCOLTO";
-            if(typeof img !== 'undefined') {
-                img.classList.remove('speaking');
-                img.classList.add('idle');
+                // Finito di parlare
+                if(typeof statusDiv !== 'undefined') statusDiv.innerText = "IN ASCOLTO";
+                if(typeof img !== 'undefined') {
+                    img.classList.remove('speaking');
+                    img.classList.add('idle');
+                }
+                return;
             }
-            return;
-        }
-
-        const textToSay = sentences[index].trim();
-        if(!textToSay) {
-            playNextSentence(sentences, index + 1, voiceObj);
-            return;
-        }
-
-        const utterance = new SpeechSynthesisUtterance(textToSay);
-        
-        // APPLICA LA VOCE (Se esiste)
-        if (voiceObj) {
-            utterance.voice = voiceObj;
-        }
-        
-        utterance.lang = 'it-IT';
-        utterance.rate = 1.1; // Leggermente più veloce
-        utterance.pitch = 1.0;
-
-        utterance.onstart = () => {
-            if(typeof img !== 'undefined') {
-                img.classList.remove('idle');
-                img.classList.add('speaking');
+    
+            const textToSay = sentences[index].trim();
+            if(!textToSay) {
+                playNextSentence(sentences, index + 1, voiceObj);
+                return;
             }
-            if(typeof statusDiv !== 'undefined') statusDiv.innerText = "NAIA PARLA...";
-        };
-
-        utterance.onend = () => {
-            playNextSentence(sentences, index + 1, voiceObj);
-        };
-
-        utterance.onerror = () => {
-            console.log("Errore audio, passo alla prossima");
-            playNextSentence(sentences, index + 1, voiceObj);
-        };
-
-        synth.speak(utterance);
-    }
+    
+            const utterance = new SpeechSynthesisUtterance(textToSay);
+            
+            // APPLICA LA VOCE (Se esiste)
+            if (voiceObj) {
+                utterance.voice = voiceObj;
+            }
+            
+            utterance.lang = 'it-IT';
+            utterance.rate = 1.1; // Leggermente più veloce
+            utterance.pitch = 1.0;
+    
+            utterance.onstart = () => {
+                if(typeof img !== 'undefined') {
+                    img.classList.remove('idle');
+                    img.classList.add('speaking');
+                }
+                if(typeof statusDiv !== 'undefined') statusDiv.innerText = "NAIA PARLA...";
+            };
+    
+            utterance.onend = () => {
+                playNextSentence(sentences, index + 1, voiceObj);
+            };
+    
+            utterance.onerror = () => {
+                console.log("Errore audio, passo alla prossima");
+                playNextSentence(sentences, index + 1, voiceObj);
+            };
+    
+            synth.speak(utterance);
+        }
         
         function startDictation() {
             const btnMic = document.getElementById('btn-mic');
@@ -168,15 +155,15 @@
             recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
         }
 
-async function sendToBrain() {
-            const inputField = document.getElementById('chat-input');
-            const question = inputField.value;
-            if (!question) return;
-
-            // ============================================================
-            // IL COPIONE DI NAIA (Modifica qui se vuoi cambiarle carattere)
-            // ============================================================
-            const SYSTEM_INSTRUCTION = `
+        async function sendToBrain() {
+                    const inputField = document.getElementById('chat-input');
+                    const question = inputField.value;
+                    if (!question) return;
+        
+                    // ============================================================
+                    // IL COPIONE DI NAIA (Modifica qui se vuoi cambiarle carattere)
+                    // ============================================================
+                    const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
@@ -184,40 +171,39 @@ REGOLE FONDAMENTALI (OBBLIGATORIE):
 4. Usa un tono professionale ma amichevole, un po' futuristico.
 5. Se non sai una cosa, di' semplicemente che stai ancora imparando.
 6. Non inventare fatti strani.
-7. Se ti chiedono "Chi sei", di che ti chiami NAIA e che sei l'AI della scuola.
-8. NON iniziare MAI dicendo "Sono NAIA". Vai dritta al punto.
-9. NON usare elenchi puntati complessi, usa frasi discorsive.
-10. Usa SOLO i dati qui sotto.
+7. SOLO Se ti chiedono "Chi sei", DEVI rispondere che ti chiami NAIA e che sei l'AI della scuola Giovanni Boccardi / Ugo Tiberio di Termoli.
+8. NON iniziare MAI una risposta dicendo "Sono NAIA", rispondi semplicemente alla domanda, vai dritta al punto.
+9. NON usare elenchi puntati complessi, USA FRASI DISCORSIVE.
+10. USA SOLO I DATI SCRITTI IN QUESTA SEZIONE.
 Il tuo compito è accogliere gli ospiti e rispondere alle domande sulla scuola.
 SCHEDA INFORMATIVA SCUOLA:
 1. DATI IDENTIFICATIVI E AMMINISTRATIVI
-Denominazione Ufficiale: Istituto di Istruzione Superiore "Giovanni Boccardi / Ugo Tiberio"
-Indirizzo Sede Centrale: Via Alcide De Gasperi, 30 – 86039 Termoli (CB), Molise.
-PEC (Posta Certificata): CBIS01800L@pec.istruzione.it
-Email Istituzionale: CBIS01800L@istruzione.it
-Sito Web: https://www.iisboccarditiberio.edu.it/
+Denominazione Ufficiale, Istituto di Istruzione Superiore "Giovanni Boccardi / Ugo Tiberio"
+Indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86039 Termoli (C,B), Molise.
+PEC (Posta Certificata) CBIS01800L@pec.istruzione.it
+Email Istituzionale CBIS01800L@istruzione.it
+Sito Web https://www.iisboccarditiberio.edu.it/
 2. STORIA E IDENTITÀ
-L'istituto nasce dalla fusione di due storiche scuole di Termoli:
+L'istituto nasce dalla fusione di due storiche scuole di Termoli
 L'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959).
 L'Istituto Tecnico Tecnologico "Ugo Tiberio" (ex Nautico e Geometri, con il Nautico presente a Termoli fin dal pre-guerra come Scuola Marinara).
-Certificazioni: L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), 
-fondamentale per il riconoscimento dei titoli marittimi internazionali.
+Certificazioni: L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), fondamentale per il riconoscimento dei titoli marittimi internazionali.
 3. OFFERTA FORMATIVA DETTAGLIATA
 L'istituto offre percorsi diurni (5 anni) e percorsi serali (istruzione per adulti).
 Settore TECNOLOGICO "Ugo Tiberio"
-1 Opzione. CAIM. Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina.
-2 Opzione. CMN. Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani).
-3 Logistica: Gestione dei trasporti intermodali terra, mare, aria e della supply chain.
-4 CAT. Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica.
+1 Opzione, C,A,I,M, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina.
+2 Opzione, C,M,N, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani).
+3 Logistica, Gestione dei trasporti intermodali terra, mare e aria.
+4 C,A,T, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica.
 Settore ECONOMICO "Giovanni Boccardi"
-1 AFM. Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative.
-2 SIA. Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia.
-3 RIM. Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali.
-4 Turismo: Percorso specifico per l'impresa turistica. Materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere.
+1 A,F,M, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative.
+2 S,I,A, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia.
+3 R,I,M, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali.
+4 Turismo, Percorso specifico per l'impresa turistica. Materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere.
 Corsi SERALI Istruzione per Adulti
 1 Percorsi abbreviati per lavoratori o chi vuole riprendere gli studi, attivi sia per l'indirizzo Economico che per il Tecnologico, in base al numero di iscritti.
 4. QUADRO ORARIO DISCIPLINE
-1 Opzione CAIM ufficiali di macchina:
+1 Opzione C,A,I,M, ufficiali di macchina:
 -Italiano 4 ore settimanali per tutta la durata del percorso di studi 
 -Storia 2 ore settimanali per tutta la durata del percorso di studi
 -Inglese 3 ore settimanali per tutta la durata del percorso di studi
@@ -230,7 +216,7 @@ Corsi SERALI Istruzione per Adulti
 -Scienze motorio 2 ore per tutti gli anni di corso
 -Religione 1 ora per tutti gli anni di corso
 -Informatica, Tecniche di rappresentazione grafica, geografia e scienze applicate si fanno nel primo e nel secondo anno
-1 Opzione CMN ufficiali di coperta:
+2 Opzione C,M,N, ufficiali di coperta:
 -Italiano 4 ore settimanali per tutta la durata del percorso di studi 
 -Storia 2 ore settimanali per tutta la durata del percorso di studi
 -Inglese 3 ore settimanali per tutta la durata del percorso di studi
@@ -245,17 +231,17 @@ Corsi SERALI Istruzione per Adulti
 -Informatica, chimica, fisica, biologia e scienze applicate si fanno nel primo e nel secondo anno
 5. STRUTTURE, LABORATORI E DOTAZIONI TECNICHE
 Se l'utente chiede "perché scegliere questa scuola" o "che laboratori avete", cita questi asset specifici:
-Planetario: Ristrutturato e riattivato (progetto "Oltre l'Infinito"), utilizzato per lezioni di astronomia e navigazione.
-Simulatore Navale: Software e hardware professionale per la simulazione di manovre navali (fondamentale per il Nautico).
-Sala Voga: Ambiente attrezzato per la preparazione fisica al canottaggio.
-Laboratori Informatici: 5 aule informatizzate (Lab. Economy 2.0, Informatica SIA, Informatica Base).
-Altri Laboratori: Chimica, Fisica, Scienze della Navigazione, Logistica.
-Digital Fabrication: Stampanti 3D e Droni professionali per rilievi topografici e sottomarini.
-Strutture Sportive: Palestra interna, sala attrezzi ginnici, tavoli da ping-pong, campetti esterni.
-Sale Conferenze: Due aule magne per eventi e assemblee.
+Planetario, Ristrutturato e riattivato (progetto "Oltre l'Infinito"), utilizzato per lezioni di astronomia e navigazione.
+Simulatore Navale, Software e hardware professionale per la simulazione di manovre navali (fondamentale per il Nautico).
+Sala Voga, Ambiente attrezzato per la preparazione fisica al canottaggio.
+Laboratori Informatici, 5 aule informatizzate (Lab. Economy 2.0, Informatica SIA, Informatica Base).
+Altri Laboratori, Chimica, Fisica, Scienze della Navigazione, Logistica.
+Digital Fabrication, Stampanti 3D e Droni professionali per rilievi topografici e sottomarini.
+Strutture Sportive, Palestra interna, sala attrezzi ginnici, tavoli da ping-pong, campetti esterni.
+Sale Conferenze, Due aule magne per eventi e assemblee.
 6. PROGETTI E OPPORTUNITÀ (EXTRA-CURRICULARI)
 Erasmus+ (Accreditamento 2022-2027) La scuola è accreditata come polo di eccellenza per la mobilità europea. Offre viaggi studio gratuiti e stage all'estero per studenti e docenti.
-PCTO (ex Alternanza Scuola-Lavoro) Collaborazioni con aziende del territorio, studi professionali, compagnie di navigazione, enti turistici e banche per tirocini formativi.
+F,S,L, (ex Alternanza Scuola-Lavoro) Collaborazioni con aziende del territorio, studi professionali, compagnie di navigazione, enti turistici e banche per tirocini formativi.
 Certificazioni Linguistiche Preparazione per Cambridge (Inglese), DELF (Francese), DELE (Spagnolo).
 Centro Sportivo Scolastico Attività pomeridiane (es. canottaggio, sport di squadra).
 7. ORGANIGRAMMA E ORARI DI RICEVIMENTO
@@ -327,5 +313,6 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
