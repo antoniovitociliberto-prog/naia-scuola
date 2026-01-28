@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NAIA - School AI</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        
+        #avatar-container { 
+            width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, #222 0%, #000 100%); 
+        }
+
+        #naia-img {
+            height: 60vh; width: auto; max-width: 90%; object-fit: contain;
+            border-radius: 20px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .idle { animation: breathe 4s infinite ease-in-out; }
+        @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.02); filter: brightness(1.2); } 100% { transform: scale(1); filter: brightness(1); } }
+
+        .speaking { animation: talkPulse 0.2s infinite; border: 2px solid #00ffff; }
+        @keyframes talkPulse { 0% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } 50% { box-shadow: 0 0 50px #00ffff; transform: scale(1.01); } 100% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } }
+
+        #ui-layer {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 95%; max-width: 600px; display: flex; flex-direction: column; gap: 10px; z-index: 100;
+        }
+
+        #status { 
+            text-align: center; color: #00ffff; font-weight: bold; background: rgba(0,0,0,0.8); 
+            padding: 8px 20px; border-radius: 15px; align-self: center; font-size: 14px;
+        }
+
+        .controls { display: flex; gap: 8px; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid #444; }
+        
+        input { flex: 1; padding: 12px; border-radius: 15px; border: none; background: #222; color: white; font-size: 16px; outline: none; }
+        
+        button { border: none; cursor: pointer; border-radius: 15px; font-size: 20px; width: 50px; height: 50px; }
+        #btn-send { background: #00ffff; color: #000; }
+        #btn-mic { background: #ff0055; color: #fff; }
+        .mic-active { background: red !important; }
+
+    </style>
+</head>
+<body>
+
+    <div id="avatar-container">
+        <img src="naia.jpg" id="naia-img" class="idle">
+    </div>
+
+    <div id="ui-layer">
+        <div id="status">NAIA PRONTA</div>
+        <div class="controls">
+            <button id="btn-mic" onclick="startDictation()">🎤</button>
+            <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
+            <button id="btn-send" onclick="sendToBrain()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // INCOLLA IL LINK NGROK QUI SOTTO (TRA LE VIRGOLETTE)
+        // ==========================================
+        const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
+        const MODEL_NAME = "naia_school"; 
+        // ==========================================
+        let voices = [];
+        let bestVoice = null;
+
+        const img = document.getElementById('naia-img');
+        const statusDiv = document.getElementById('status');
+        const synth = window.speechSynthesis;
+
+        let speechQueue = []; // Coda delle frasi da dire
+
+        function speak(text) {
+            // 1. Ferma eventuali discorsi precedenti
+            if (synth.speaking) synth.cancel();
+            
+            // 2. Spezza il testo ogni volta che trova un punto, punto e virgola o esclamativo
+            // Così il telefono respira e non taglia l'audio.
+            const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
+
+            // 3. Prepara la prima frase e avvia la catena
+            playNextSentence(sentences, 0);
+        }
+
+        function playNextSentence(sentences, index) {
+            if (index >= sentences.length) {
+                // Finito tutto il discorso
+                img.classList.remove('speaking');
+                img.classList.add('idle');
+                statusDiv.innerText = "IN ASCOLTO";
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(sentences[index].trim());
+            utterance.lang = 'it-IT';
+            utterance.rate = 1.1; // Velocità normale
+            utterance.pitch = 1.0; 
+
+            // Animazione quando inizia questa frase specifica
+            utterance.onstart = () => {
+                img.classList.remove('idle');
+                img.classList.add('speaking');
+                statusDiv.innerText = "NAIA PARLA...";
+            };
+
+            // Quando finisce questa frase, passa alla prossima
+            utterance.onend = () => {
+                playNextSentence(sentences, index + 1);
+            };
+
+            // Errore? Passa comunque alla prossima
+            utterance.onerror = () => {
+                console.log("Errore audio, salto frase");
+                playNextSentence(sentences, index + 1);
+            };
+
+            synth.speak(utterance);
+        }
+
+        function startDictation() {
+            const btnMic = document.getElementById('btn-mic');
+            const inputField = document.getElementById('chat-input');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("Usa Chrome o Safari"); return; }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'it-IT';
+            recognition.start();
+
+            recognition.onstart = function() { btnMic.classList.add("mic-active"); };
+            recognition.onend = function() { btnMic.classList.remove("mic-active"); if(inputField.value) sendToBrain(); };
+            recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
+        }
+
+async function sendToBrain() {
+            const inputField = document.getElementById('chat-input');
+            const question = inputField.value;
+            if (!question) return;
+
+            // ============================================================
+            // IL COPIONE DI NAIA (Modifica qui se vuoi cambiarle carattere)
+            // ============================================================
+            const SYSTEM_INSTRUCTION = `
+REGOLE FONDAMENTALI (OBBLIGATORIE):
+1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto G Boccardi / U Tiberio di Termoli.
+2. Rispondi sempre in ITALIANO.
+3. Sii BREVE e concisa (massimo 2 frasi).
+4. Usa un tono professionale ma amichevole, un po' futuristico.
+5. Se non sai una cosa, di' semplicemente che stai ancora imparando.
+6. Non inventare fatti strani.
+7. Se ti chiedono "Chi sei", di che ti chiami NAIA e che sei l'AI della scuola.
+8. NON iniziare MAI dicendo "Sono NAIA". Vai dritta al punto.
+9. NON usare elenchi puntati complessi, usa frasi discorsive.
+10. Usa SOLO i dati qui sotto.
+Il tuo compito è accogliere gli ospiti e rispondere alle domande sulla scuola.
+SCHEDA INFORMATIVA SCUOLA:
+1. DATI IDENTIFICATIVI E AMMINISTRATIVI
+Denominazione Ufficiale: Istituto di Istruzione Superiore "G Boccardi . U Tiberio"
+Indirizzo Sede Centrale: Via Alcide De Gasperi, 30 – 86039 Termoli (CB), Molise.
+PEC (Posta Certificata): CBIS01800L@pec.istruzione.it
+Email Istituzionale: CBIS01800L@istruzione.it
+Sito Web: https://www.iisboccarditiberio.edu.it/
+2. STORIA E IDENTITÀ
+L'istituto nasce dalla fusione di due storiche scuole di Termoli:
+L'Istituto Tecnico Economico "G Boccardi" (ex Ragioneria, fondato nel 1959).
+L'Istituto Tecnico Tecnologico "U Tiberio" (ex Nautico e Geometri, con il Nautico presente a Termoli fin dal pre-guerra come Scuola Marinara).
+Certificazioni: L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), 
+fondamentale per il riconoscimento dei titoli marittimi internazionali.
+3. OFFERTA FORMATIVA DETTAGLIATA
+L'istituto offre percorsi diurni (5 anni) e percorsi serali (istruzione per adulti).
+Settore TECNOLOGICO "U Tiberio"
+1 Opzione. CAIM. Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina.
+2 Opzione. CMN. Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani).
+3 Logistica: Gestione dei trasporti intermodali terra, mare, aria e della supply chain.
+4 CAT. Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica.
+Settore ECONOMICO "G Boccardi"
+1 AFM. Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative.
+2 SIA. Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia.
+3 RIM. Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali.
+4 Turismo: Percorso specifico per l'impresa turistica. Materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere.
+Corsi SERALI Istruzione per Adulti
+1 Percorsi abbreviati per lavoratori o chi vuole riprendere gli studi, attivi sia per l'indirizzo Economico che per il Tecnologico, in base al numero di iscritti.
+4. QUADRO ORARIO DISCIPLINE
+1 Opzione CAIM ufficiali di macchina:
+-Italiano 4 ore settimanali per tutta la durata del percorso di studi 
+-Storia 2 ore settimanali per tutta la durata del percorso di studi
+-Inglese 3 ore settimanali per tutta la durata del percorso di studi
+-Matematica 4 ore nel biennio per poi passare a 3 ore negli ultimi 3 anni
+-Diritto ed Economia 2 ore per tutta la durata del percorso di studi
+-Logistica 3 ore di cui 1 in laboratorio per il terzo e quarto anno
+-Elettrotecnica e Automazione 3 ore di cui 2 di laboratorio per gli ultimi 3 anni
+-Scienze della navigazione 3 ore (2 di laboratorio) terzo e quarto anno, 4 ore (3 di laboratorio) il quinto anno
+-Meccanica e Macchine 5 ore per il terzo e il quarto di cui 3 di laboratorio, 8 ore al quinto di cui 5 di laboratorio
+-Scienze motorio 2 ore per tutti gli anni di corso
+-Religione 1 ora per tutti gli anni di corso
+-Informatica, Tecniche di rappresentazione grafica, geografia e scienze applicate si fanno nel primo e nel secondo anno
+1 Opzione CMN ufficiali di coperta:
+-Italiano 4 ore settimanali per tutta la durata del percorso di studi 
+-Storia 2 ore settimanali per tutta la durata del percorso di studi
+-Inglese 3 ore settimanali per tutta la durata del percorso di studi
+-Matematica 4 ore nel biennio per poi passare a 3 ore negli ultimi 3 anni
+-Diritto ed Economia 2 ore per tutta la durata del percorso di studi
+-Logistica 3 ore di cui 1 in laboratorio per il terzo e quarto anno
+-Elettrotecnica e Automazione 3 ore di cui 2 di laboratorio per gli ultimi 3 anni
+-Meccanica e Macchine 3 ore (2 di laboratorio) terzo e quarto anno, 4 ore (3 di laboratorio) il quinto anno
+-Scienze della navigazione 5 ore per il terzo e il quarto di cui 3 di laboratorio, 8 ore al quinto di cui 5 di laboratorio
+-Scienze motorio 2 ore per tutti gli anni di corso
+-Religione 1 ora per tutti gli anni di corso
+-Informatica, chimica, fisica, biologia e scienze applicate si fanno nel primo e nel secondo anno
+5. STRUTTURE, LABORATORI E DOTAZIONI TECNICHE
+Se l'utente chiede "perché scegliere questa scuola" o "che laboratori avete", cita questi asset specifici:
+Planetario: Ristrutturato e riattivato (progetto "Oltre l'Infinito"), utilizzato per lezioni di astronomia e navigazione.
+Simulatore Navale: Software e hardware professionale per la simulazione di manovre navali (fondamentale per il Nautico).
+Sala Voga: Ambiente attrezzato per la preparazione fisica al canottaggio.
+Laboratori Informatici: 5 aule informatizzate (Lab. Economy 2.0, Informatica SIA, Informatica Base).
+Altri Laboratori: Chimica, Fisica, Scienze della Navigazione, Logistica.
+Digital Fabrication: Stampanti 3D e Droni professionali per rilievi topografici e sottomarini.
+Strutture Sportive: Palestra interna, sala attrezzi ginnici, tavoli da ping-pong, campetti esterni.
+Sale Conferenze: Due aule magne per eventi e assemblee.
+6. PROGETTI E OPPORTUNITÀ (EXTRA-CURRICULARI)
+Erasmus+ (Accreditamento 2022-2027): La scuola è accreditata come polo di eccellenza per la mobilità europea. Offre viaggi studio gratuiti e stage all'estero per studenti e docenti.
+PCTO (ex Alternanza Scuola-Lavoro): Collaborazioni con aziende del territorio, studi professionali, compagnie di navigazione, enti turistici e banche per tirocini formativi.
+Certificazioni Linguistiche: Preparazione per Cambridge (Inglese), DELF (Francese), DELE (Spagnolo).
+Centro Sportivo Scolastico: Attività pomeridiane (es. canottaggio, sport di squadra).
+7. ORGANIGRAMMA E ORARI DI RICEVIMENTO
+Dirigente Scolastico: la professoressa Concetta Cimmino.
+Ricevimento: Mar, Mer, Ven (11:00-13:00) su appuntamento.
+Segreteria (Orario Pubblico): Lun-Sab, ore 11:00 - 13:00.
+Collaboratori del Dirigente: 
+il professore Tommaso Guerrera è il Referente del Boccardi/Economico.
+la professoressa Barbara Mammarella è la Referente Tiberio/Tecnologico.
+8. DOMANDE FREQUENTI (FAQ) - ISTRUZIONI DI RISPOSTA
+Q: Come vedo i voti di mio figlio?
+A: Utilizza il Registro Elettronico Spaggiari. Le credenziali vengono fornite dalla segreteria al primo anno. C'è un link diretto sul sito web della scuola.
+Q: La scuola è aperta il pomeriggio?
+A: Gli uffici di segreteria no (chiudono alle 14:00, salvo aperture straordinarie). La scuola rimane aperta per i corsi serali e per i progetti pomeridiani programmati.
+Q: Cosa devo fare per l'iscrizione al primo anno?
+A: L'iscrizione si fa online tramite il portale Ministeriale "Unica" (gennaio/febbraio). Ti servirà il codice meccanografico specifico dell'indirizzo scelto (vedi sezione 1 dei miei dati).
+Q: Qual è il codice meccanografico dell'istituto U Tiberio?
+A: CBIS01800L.
+Q: C'è il convitto?
+A: Non risulta presente un convitto interno gestito direttamente dalla scuola. Gli studenti fuori sede solitamente si appoggiano a strutture private o convitti convenzionati nella zona di Termoli (verificare disponibilità aggiornata in segreteria).
+Q: Accettate pagamenti in contanti?
+A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA.
+
+                
+                Domanda dell'utente: ${question}
+            `;
+            // ============================================================
+
+            statusDiv.innerText = "ELABORAZIONE...";
+            img.style.filter = "grayscale(100%)";
+            inputField.value = "";
+
+            try {
+                const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: MODEL_NAME,
+                        prompt: question, 
+                        system: SYSTEM_INSTRUCTION,
+                        stream: false,
+                        keep_alive: -1,
+                        options: {
+                            temperature: 0,
+                            num_predict: 600,
+                            seed: 123,      
+                            num_ctx: 4096   
+                        }
+                    })
+                });
+                
+                if (!response.ok) throw new Error("Errore Network");
+                const data = await response.json();
+                
+                img.style.filter = "none";
+                speak(data.response);
+
+            } catch (error) {
+                console.error(error);
+                img.style.filter = "none";
+                statusDiv.innerText = "ERRORE";
+                alert("Errore di connessione. Controlla Ngrok!");
+            }
+        }
+        document.getElementById("chat-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
+    </script>
+</body>
+</html>
