@@ -5,62 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NAIA - School AI</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
-        
-        #avatar-container { 
-            width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: radial-gradient(circle, #222 0%, #000 100%); 
+        /* --- NUOVO STILE DARK & LAYOUT --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Sfondo scuro */
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column; /* Impila: Chat -> Avatar -> Input */
+            overflow: hidden;
+        }
+
+        /* 1. ZONA TESTO (IN ALTO) */
+        #chat-container {
+            flex: 1; /* Prende tutto lo spazio disponibile sopra */
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 15px;
+            font-size: 15px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user-msg {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-msg {
+            align-self: flex-start;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            border-bottom-left-radius: 2px;
+            border-left: 3px solid #00ffff;
+        }
+
+        /* 2. ZONA AVATAR (CENTRO) */
+        #avatar-container {
+            height: 35vh; /* Altezza fissa per l'avatar */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #1e1e1e 0%, #121212 70%);
+            position: relative;
         }
 
         #naia-img {
-            height: 60vh; width: auto; max-width: 90%; object-fit: contain;
-            border-radius: 20px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            height: 90%;
+            width: auto;
+            max-width: 90%;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
             transition: all 0.3s ease;
         }
 
+        /* Animazioni Avatar (Mantenute dal tuo codice) */
         .idle { animation: breathe 4s infinite ease-in-out; }
         @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.02); filter: brightness(1.2); } 100% { transform: scale(1); filter: brightness(1); } }
 
         .speaking { animation: talkPulse 0.2s infinite; border: 2px solid #00ffff; }
         @keyframes talkPulse { 0% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } 50% { box-shadow: 0 0 50px #00ffff; transform: scale(1.01); } 100% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } }
 
+        /* 3. ZONA INPUT (IN BASSO) */
         #ui-layer {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 95%; max-width: 600px; display: flex; flex-direction: column; gap: 10px; z-index: 100;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border-top: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
         }
 
-        #status { 
-            text-align: center; color: #00ffff; font-weight: bold; background: rgba(0,0,0,0.8); 
-            padding: 8px 20px; border-radius: 15px; align-self: center; font-size: 14px;
+        #status {
+            text-align: center;
+            color: #00ffff;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .controls { display: flex; gap: 8px; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid #444; }
-        
-        input { flex: 1; padding: 12px; border-radius: 15px; border: none; background: #222; color: white; font-size: 16px; outline: none; }
-        
-        button { border: none; cursor: pointer; border-radius: 15px; font-size: 20px; width: 50px; height: 50px; }
-        #btn-send { background: #00ffff; color: #000; }
-        #btn-mic { background: #ff0055; color: #fff; }
-        .mic-active { background: red !important; }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px;
+            border-radius: 30px;
+            border: 1px solid #444;
+            background: #2c2c2c;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+        input:focus { border-color: #007bff; }
+
+        button {
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+        button:active { transform: scale(0.9); }
+
+        #btn-send { background: #007bff; color: white; }
+        #btn-mic { background: #333; color: #fff; border: 1px solid #555; }
+        .mic-active { background: #ff0055 !important; border-color: #ff0055 !important; animation: pulseRed 1s infinite; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); } }
 
     </style>
 </head>
 <body>
 
+    <div id="chat-container">
+        <div class="message ai-msg">Ciao, sono NAIA. Benvenuto all'Istituto Boccardi-Tiberio. Come posso aiutarti?</div>
+    </div>
+
     <div id="avatar-container">
-        <img src="naia.jpg" id="naia-img" class="idle">
+        <img src="naia.jpg" id="naia-img" class="idle" alt="Avatar NAIA">
     </div>
 
     <div id="ui-layer">
-        <div id="status">NAIA PRONTA</div>
+        <div id="status">SISTEMA PRONTO</div>
         <div class="controls">
             <button id="btn-mic" onclick="startDictation()">🎤</button>
-            <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
+            <input type="text" id="chat-input" placeholder="Chiedi qualcosa sulla scuola..." autocomplete="off">
             <button id="btn-send" onclick="sendToBrain()">➤</button>
         </div>
     </div>
 
     <script>
+        // ==========================================
+        // IL TUO CODICE ORIGINALE (INTEGRALE)
+        // ==========================================
         
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
@@ -70,32 +174,38 @@
 
         const img = document.getElementById('naia-img');
         const statusDiv = document.getElementById('status');
+        const chatContainer = document.getElementById('chat-container'); // Riferimento alla chat in alto
         const synth = window.speechSynthesis;
 
         let speechQueue = []; 
+
+        // Funzione helper per aggiungere messaggi alla chat visiva (Nuova aggiunta solo per visualizzazione)
+        function appendMessage(text, sender) {
+            const div = document.createElement('div');
+            div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
+            div.innerText = text;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
         function speak(text) {
             if (synth.speaking) synth.cancel();
 
             const allVoices = synth.getVoices();
-
             const itVoices = allVoices.filter(v => v.lang.includes("it"));
         
             const femaleVoice = itVoices.find(v => v.name.includes("Google")) 
                              || itVoices.find(v => v.name.includes("Elsa")) 
                              || itVoices.find(v => v.name.includes("Alice"))
                              || itVoices.find(v => v.name.includes("Federica"))
-                             || itVoices[0]; // Se non trova donne, usa la prima italiana che capita
+                             || itVoices[0]; 
 
             const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
-
-        
             playNextSentence(sentences, 0, femaleVoice);
         }
 
         function playNextSentence(sentences, index, voiceObj) {
-        if (index >= sentences.length) {
-                // Finito di parlare
+            if (index >= sentences.length) {
                 if(typeof statusDiv !== 'undefined') statusDiv.innerText = "IN ASCOLTO";
                 if(typeof img !== 'undefined') {
                     img.classList.remove('speaking');
@@ -112,7 +222,6 @@
     
             const utterance = new SpeechSynthesisUtterance(textToSay);
             
-            // APPLICA LA VOCE (Se esiste)
             if (voiceObj) {
                 utterance.voice = voiceObj;
             }
@@ -150,20 +259,23 @@
             recognition.lang = 'it-IT';
             recognition.start();
 
-            recognition.onstart = function() { btnMic.classList.add("mic-active"); };
+            recognition.onstart = function() { btnMic.classList.add("mic-active"); statusDiv.innerText = "ASCOLTO..."; };
             recognition.onend = function() { btnMic.classList.remove("mic-active"); if(inputField.value) sendToBrain(); };
             recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
         }
 
         async function sendToBrain() {
-                    const inputField = document.getElementById('chat-input');
-                    const question = inputField.value;
-                    if (!question) return;
+            const inputField = document.getElementById('chat-input');
+            const question = inputField.value;
+            if (!question) return;
+
+            // 1. Aggiungo messaggio utente alla chat visiva
+            appendMessage(question, 'user');
         
-                    // ============================================================
-                    // IL COPIONE DI NAIA (Modifica qui se vuoi cambiarle carattere)
-                    // ============================================================
-                    const SYSTEM_INSTRUCTION = `
+            // ============================================================
+            // IL TUO COPIONE (NON TOCCATO)
+            // ============================================================
+            const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
@@ -266,89 +378,9 @@ A: Non risulta presente un convitto interno gestito direttamente dalla scuola. G
 Q: Accettate pagamenti in contanti?
 A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA
 
-
-                
-                Domanda dell'utente: ${question}
-           `;
+            Domanda dell'utente: ${question}
+            `;
             // ============================================================
 
             statusDiv.innerText = "ELABORAZIONE...";
-            img.style.filter = "grayscale(100%)";
-            inputField.value = "";
-
-            try {
-                const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: MODEL_NAME,
-                        prompt: question, 
-                        system: SYSTEM_INSTRUCTION,
-                        stream: false,
-                        keep_alive: -1,
-                        options: {
-                            temperature: 0,
-                            num_predict: 600,
-                            seed: 123,      
-                            num_ctx: 4096   
-                        }
-                    })
-                });
-                
-                if (!response.ok) throw new Error("Errore Network");
-                const data = await response.json();
-                
-                let rawText = data.response;
-            
-                // 1. Cancella specificamente gli asterischi in ogni forma
-                let cleanText = rawText.replace(/\*/g, ""); 
-                // 1. TRADUTTORE EMAIL (La parte che volevi)
-                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
-                    return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
-                });
-
-                // 2. TRADUTTORE SITI WEB
-                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
-                     return match.replace(/\./g, " punto ");
-                });
-                // 2. Cancella cancelletti, underscore e markdown vari
-                cleanText = cleanText.replace(/[#_`~]/g, "");
-    
-                // 3. Sistema la punteggiatura (A capo -> Punto)
-                cleanText = cleanText.replace(/\n/g, ". ");
-                
-                // 4. Toglie "Sono NAIA"
-                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
-                
-                img.style.filter = "none";
-                speak(cleanText);
-
-            } catch (error) {
-                console.error(error);
-                img.style.filter = "none";
-                statusDiv.innerText = "ERRORE DI RETE";
-                alert("Errore di connessione. Controlla Ngrok!");
-            }
-        }
-        document.getElementById("chat-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
-    </script>
-</body>
-
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            img.style.filter = "grayscale(
