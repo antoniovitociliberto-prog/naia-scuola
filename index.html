@@ -315,7 +315,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
                 
                 img.style.filter = "none";
-                speak(data.response);
+                speak(cleanText);
 
             } catch (error) {
                 console.error(error);
@@ -329,6 +329,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
