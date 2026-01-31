@@ -121,29 +121,34 @@
             
             scene = new THREE.Scene();
             
-            // CAMERA: Modifica Y (altezza) e Z (zoom) per inquadrare meglio
+            // 1. TELECAMERA LONTANA (Per trovarla)
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.45, 0.7); 
+            camera.position.set(0, 1.0, 2.5); // X=0, Y=1m, Z=2.5m (Molto più indietro)
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.outputColorSpace = THREE.SRGBColorSpace; // Colori vividi
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
             container.appendChild(renderer.domElement);
 
-            // LUCI
-            const ambientLight = new THREE.HemisphereLight(0xffffff, 0x222222, 1.5); // Luce ambiente forte
+            // 2. LUCI FORTISSIME (Per essere sicuri che si veda)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 2.5); // Luce bianca ovunque
             scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-            dirLight.position.set(0, 2, 2);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+            dirLight.position.set(0, 2, 3); // Luce frontale
             scene.add(dirLight);
 
-            // CARICAMENTO MODELLO
+            // 3. AIUTO VISIVO (Disegna una griglia per terra)
+            // Se vedi questa griglia, il 3D funziona.
+            const gridHelper = new THREE.GridHelper(10, 10, 0x00ffff, 0x333333);
+            scene.add(gridHelper);
+
+            // CARICAMENTO AVATAR
             const loader = new GLTFLoader();
             loader.load(AVATAR_URL, (gltf) => {
                 model = gltf.scene;
                 scene.add(model);
                 
-                // CERCA I "MUSCOLI" FACCIALI
                 model.traverse((child) => {
                     if (child.isMesh && child.morphTargetDictionary) {
                         if (child.morphTargetDictionary['mouthOpen'] !== undefined) {
@@ -157,11 +162,12 @@
                     }
                 });
 
-                // POSIZIONE DEL CORPO (Abbassa per vedere il viso)
-                model.position.y = -1.55; 
+                // POSIZIONE STANDARD
+                model.position.set(0, -1.0, 0); // Piedi a -1 metro (sul pavimento o poco sotto)
+                model.scale.set(1, 1, 1); // Scala normale
 
                 document.getElementById('loading').style.display = 'none';
-                statusDiv.innerText = "NAIA PRONTA";
+                statusDiv.innerText = "NAIA TROVATA!";
 
             }, undefined, (e) => {
                 console.error(e);
@@ -175,8 +181,7 @@
             });
 
             animate();
-        }
-
+        } 
         // LOOP ANIMAZIONE
         function animate() {
             requestAnimationFrame(animate);
@@ -435,3 +440,4 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
