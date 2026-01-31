@@ -383,4 +383,62 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             // ============================================================
 
             statusDiv.innerText = "ELABORAZIONE...";
-            img.style.filter = "grayscale(
+            img.style.filter = "grayscale(100%)";
+            inputField.value = "";
+
+            try {
+                const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODEL_NAME,
+                        prompt: question, 
+                        system: SYSTEM_INSTRUCTION,
+                        stream: false,
+                        keep_alive: -1,
+                        options: {
+                            temperature: 0,
+                            num_predict: 600,
+                            seed: 123,      
+                            num_ctx: 4096   
+                        }
+                    })
+                });
+                
+                if (!response.ok) throw new Error("Errore Network");
+                const data = await response.json();
+                
+                let rawText = data.response;
+            
+                // 1. Pulisce asterischi
+                let cleanText = rawText.replace(/\*/g, ""); 
+                // 2. Email e Siti
+                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                    return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
+                });
+                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                     return match.replace(/\./g, " punto ");
+                });
+                // 3. Altri caratteri
+                cleanText = cleanText.replace(/[#_`~]/g, "");
+                cleanText = cleanText.replace(/\n/g, ". ");
+                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
+                
+                img.style.filter = "none";
+                
+                // Aggiungo risposta AI alla chat visiva (COSI VEDI IL TESTO)
+                appendMessage(cleanText, 'ai');
+                
+                speak(cleanText);
+
+            } catch (error) {
+                console.error(error);
+                img.style.filter = "none";
+                statusDiv.innerText = "ERRORE DI RETE";
+                alert("Errore di connessione. Controlla Ngrok!");
+            }
+        }
+        document.getElementById("chat-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
+    </script>
+</body>
+</html>
