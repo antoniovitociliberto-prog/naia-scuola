@@ -301,19 +301,18 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 const data = await response.json();
                 
                 let rawText = data.response;
-                //let cleanText = data.response;
-                // 1. TRADUTTORE EMAIL (La parte che volevi)
-                //cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
-                //    return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
-                //});
-
-                // 2. TRADUTTORE SITI WEB
-                //cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
-                //     return match.replace(/\./g, " punto ");
-                //});
+            
                 // 1. Cancella specificamente gli asterischi in ogni forma
                 let cleanText = rawText.replace(/\*/g, ""); 
-                
+                // 1. TRADUTTORE EMAIL (La parte che volevi)
+                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                    return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
+                });
+
+                // 2. TRADUTTORE SITI WEB
+                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                     return match.replace(/\./g, " punto ");
+                });
                 // 2. Cancella cancelletti, underscore e markdown vari
                 cleanText = cleanText.replace(/[#_`~]/g, "");
     
@@ -338,6 +337,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
