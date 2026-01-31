@@ -2,435 +2,175 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA - Boccardi Tiberio AI</title>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - Layout Fixed</title>
     <style>
-        /* --- STILE GENERALE --- */
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
-        
-        #scene-container {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-            z-index: 1;
-        }
-
-        /* --- ZONA TESTO IN ALTO (CORRETTO) --- */
-        #top-ui {
-            position: absolute; 
-            top: 50px; /* Distanza dal bordo alto */
-            width: 100%; 
-            display: flex; 
+        /* --- STILE DARK & LAYOUT --- */
+        body {
+            margin: 0;
+            background-color: #121212;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            height: 100vh;
+            display: flex;
             flex-direction: column;
-            align-items: center; 
-            z-index: 100; 
-            pointer-events: none; 
+            overflow: hidden;
         }
 
-        #status-pill { 
-            color: #00ffff; font-weight: 800; background: rgba(0, 0, 0, 0.7); 
-            padding: 15px 40px; border-radius: 50px; font-size: 20px; 
-            border: 2px solid #00ffff; box-shadow: 0 0 25px rgba(0, 255, 255, 0.4); 
-            text-transform: uppercase; letter-spacing: 2px; backdrop-filter: blur(5px);
-            pointer-events: auto;
-            text-align: center;
+        /* 1. CHAT (IN ALTO) */
+        #chat-interface {
+            flex: 1; /* Prende tutto lo spazio in alto */
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        #subtitle {
-            margin-top: 10px;
-            color: #aaaaaa;
-            font-size: 14px;
-            text-shadow: 0 0 5px rgba(255,255,255,0.3);
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        .user-msg { align-self: flex-end; background-color: #007bff; color: white; }
+        .ai-msg { align-self: flex-start; background-color: #333; color: #ddd; }
+
+        /* 2. AVATAR (AL CENTRO) */
+        #avatar-container {
+            height: 40%; /* Altezza dedicata all'avatar */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, #222 0%, #121212 80%);
+            position: relative;
         }
 
-        /* --- ZONA COMANDI IN BASSO --- */
-        #bottom-ui {
-            position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; z-index: 100; pointer-events: none;
+        #avatar-img {
+            max-height: 90%;
+            max-width: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(0, 123, 255, 0.2));
+            transition: transform 0.2s;
         }
 
-        .controls { 
-            display: flex; gap: 20px; padding: 20px; 
-            background: rgba(20, 20, 20, 0.85); border-radius: 40px; 
-            backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.15);
-            pointer-events: auto;
+        /* 3. INPUT (IN BASSO) */
+        #input-area {
+            padding: 20px;
+            background-color: #1a1a1a;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #333;
         }
 
-        button { 
-            border: none; cursor: pointer; border-radius: 50%; width: 70px; height: 70px; 
-            font-size: 32px; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; 
+        input {
+            flex-grow: 1;
+            padding: 15px;
+            border-radius: 30px;
+            border: 1px solid #444;
+            background: #2c2c2c;
+            color: white;
+            outline: none;
         }
-        button:active { transform: scale(0.95); }
         
-        #btn-mic { background: linear-gradient(135deg, #ff0055, #ff3377); color: #fff; box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
-        .mic-active { animation: pulseMic 1.5s infinite; background: #ff0000 !important; transform: scale(1.1); }
-        #btn-keyboard { background: #333; color: #fff; border: 2px solid #555; }
-        #btn-send { background: #00ffff; color: #000; width: 60px; height: 60px; font-size: 26px; margin-left: 10px; }
+        button {
+            padding: 0 25px;
+            border-radius: 30px;
+            border: none;
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-        #text-area { display: none; flex: 1; align-items: center; width: 100%; gap: 10px; }
-        input { width: 250px; padding: 15px; border-radius: 30px; border: 2px solid #555; background: rgba(0,0,0,0.9); color: white; font-size: 18px; outline: none; }
-        input:focus { border-color: #00ffff; }
-
-        @keyframes pulseMic { 0% { box-shadow: 0 0 20px rgba(255,0,0,0.5); } 50% { box-shadow: 0 0 60px rgba(255,0,0,0.8); } 100% { box-shadow: 0 0 20px rgba(255,0,0,0.5); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="scene-container"></div>
-
-    <div id="top-ui">
-        <div id="status-pill">SISTEMA IN AVVIO</div>
-        <div id="subtitle">Istituto Boccardi-Tiberio AI</div>
+    <div id="chat-interface">
+        <div class="message ai-msg">Sistema online. In attesa di input.</div>
     </div>
 
-    <div id="bottom-ui">
-        <div class="controls" id="controls-bar">
-            <button id="btn-keyboard" onclick="toggleKeyboard()">⌨️</button>
-            <button id="btn-mic" onclick="startDictation()">🎤</button>
-            <div id="text-area">
-                <input type="text" id="chat-input" placeholder="Scrivi domanda..." autocomplete="off">
-                <button id="btn-send" onclick="sendToBrain()">➤</button>
-            </div>
-        </div>
+    <div id="avatar-container">
+        <img id="avatar-img" src="https://media.tenor.com/On7KVX2S6WEAAAAj/loading-waiting.gif" alt="Avatar">
     </div>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Scrivi qui..." autofocus>
+        <button id="send-btn">Invia</button>
+    </div>
 
-        // ============================================================
-        // !!! CONFIGURAZIONE AI - INSERISCI QUI I DATI !!!
-        // ============================================================
+    <script>
+        // ==========================================
+        // CONFIGURAZIONE DEL CERVELLO (PROMPT)
+        // ==========================================
         
-        // 1. Inserisci il link Ngrok qui sotto
-        const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
+        // MODIFICA QUI IL COMPORTAMENTO DELL'AI
+        const SYSTEM_PROMPT = "Sei un assistente sarcastico e molto intelligente. Rispondi in modo breve e diretto.";
         
-        const MODEL_NAME = "naia_school"; 
-        
-        // 2. QUESTO È IL PROMPT CHE MANCAVA PRIMA
-        const SYSTEM_PROMPT = `
-REGOLE FONDAMENTALI (OBBLIGATORIE):
-1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
-2. Rispondi sempre in ITALIANO.
-3. VIETATO USARE FORMATTAZIONE VISIVA: NIENTE ASTERISCHI (*), niente elenchi puntati, niente grassetti, niente titoli (#).
-4. Sii BREVE e concisa (massimo 2 frasi).
-5. Usa un tono professionale ma amichevole, un po' futuristico.
-6. Se non sai una cosa, di' semplicemente che stai ancora imparando.
-7. Non inventare fatti strani.
-8. SOLO Se ti chiedono "Chi sei", DEVI rispondere che ti chiami NAIA e che sei l'AI della scuola Giovanni Boccardi / Ugo Tiberio di Termoli.
-9. DOPO ESSERTI PRESENTATA LA PRIMA VOLTA NON INIZIARE MAI una risposta dicendo "Sono NAIA", rispondi semplicemente alla domanda, vai dritta al punto.
-10. NON usare elenchi puntati complessi, USA FRASI DISCORSIVE.
-11. USA SOLO I DATI SCRITTI IN QUESTA SEZIONE.
-I tuo compito è accogliere gli ospiti e rispondere alle domande sulla scuola.
-SCHEDA INFORMATIVA SCUOLA:
-1. DATI IDENTIFICATIVI E AMMINISTRATIVI
-denominazione Ufficiale, Istituto di Istruzione Superiore Giovanni Boccardi / Ugo Tiberio
-via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86039 Termoli (C,B), Molise
-pec (Posta Certificata) CBIS01800L@pec.istruzione.it
-email Istituzionale CBIS01800L@istruzione.it
-sito Web www.iisboccarditiberio.edu.it/
-2. STORIA E IDENTITÀ
-l'istituto nasce dalla fusione di due storiche scuole di Termoli
-l'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959)
-l'Istituto Tecnico Tecnologico "Ugo Tiberio" (ex Nautico e Geometri, con il Nautico presente a Termoli fin dal pre-guerra come Scuola Marinara)
-certificazioni: L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), fondamentale per il riconoscimento dei titoli marittimi internazionali
-3. OFFERTA FORMATIVA DETTAGLIATA
-l'istituto offre percorsi diurni (5 anni) e percorsi serali (istruzione per adulti)
-per il settore tecnologico Ugo Tiberio abbiamo a disposizione i seguenti corsi di studio:
-indirizzo c a i m, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina
-indirizzo c m n, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani)
-indirizzo logistica, Gestione dei trasporti intermodali terra, mare e aria
-indirizzo c a t, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica
-per il settore economico Giovanni Boccardi abbiamo a disposizione i seguenti corsi di studio:
-indirizzo a f m, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative
-indirizzi s i a, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia
-indirizzo r i m, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali
-indirizzo turismo, Percorso specifico per l'impresa turistica. Materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere
-corsi SERALI Istruzione per Adulti
-percorsi abbreviati per lavoratori o chi vuole riprendere gli studi, attivi sia per l'indirizzo Economico che per il Tecnologico, in base al numero di iscritti
-4. QUADRO ORARIO DISCIPLINE
-1 Opzione caim ufficiali di macchina:
-italiano 4 ore settimanali per l'intera durata del percorso di studi
-storia 2 ore settimanali per l'intera durata del percorso di studi
-inglese 3 ore settimanali per l'intera durata del percorso di studi
-matematica 4 ore nel biennio per poi passare a 3 ore negli ultimi 3 anni
-diritto ed Economia 2 ore per l'intera durata del percorso di studi
-logistica 3 ore di cui 1 in laboratorio per il terzo e quarto anno
-elettrotecnica e Automazione 3 ore di cui 2 di laboratorio per gli ultimi 3 anni
-scienze della navigazione 3 ore (2 di laboratorio) terzo e quarto anno, 4 ore (3 di laboratorio) il quinto anno
-meccanica e Macchine 5 ore per il terzo e il quarto di cui 3 di laboratorio, 8 ore al quinto di cui 5 di laboratorio
-scienze motorie 2 ore per tutti gli anni di corso 
-religione 1 ora per tutti gli anni di corso 
-informatica, Tecniche di rappresentazione grafica, geografia e scienze applicate si fanno nel primo e nel secondo anno 
-2 Opzione cmn ufficiali di coperta:
-italiano 4 ore settimanali per l'intera durata del percorso di studi 
-storia 2 ore settimanali per l'intera durata del percorso di studi
-inglese 3 ore settimanali per l'intera durata del percorso di studi 
-matematica 4 ore nel biennio per poi passare a 3 ore negli ultimi 3 anni 
-diritto ed Economia 2 ore per l'intera durata del percorso di studi 
-logistica 3 ore di cui 1 in laboratorio per il terzo e quarto anno 
-elettrotecnica e Automazione 3 ore di cui 2 di laboratorio per gli ultimi 3 anni 
-meccanica e Macchine 3 ore (2 di laboratorio) terzo e quarto anno, 4 ore (3 di laboratorio) il quinto anno 
-scienze della navigazione 5 ore per il terzo e il quarto di cui 3 di laboratorio, 8 ore al quinto di cui 5 di laboratorio 
-scienze motorie 2 ore per tutti gli anni di corso 
-religione 1 ora per tutti gli anni di corso 
-informatica, chimica, fisica, biologia e scienze applicate si fanno nel primo e nel secondo anno 
-5. STRUTTURE, LABORATORI E DOTAZIONI TECNICHE
-se l'utente chiede "perché scegliere questa scuola" o "che laboratori avete", cita questi asset specifici:
-planetario, Ristrutturato e riattivato (progetto "Oltre l'Infinito"), utilizzato per lezioni di astronomia e navigazione 
-simulatore Navale, Software e hardware professionale per la simulazione di manovre navali (fondamentale per il Nautico)
-sala Voga, Ambiente attrezzato per la preparazione fisica al canottaggio 
-laboratori Informatici, 5 aule informatizzate (Lab. Economy 2.0, Informatica SIA, Informatica Base) 
-altri Laboratori, Chimica, Fisica, Scienze della Navigazione, Logistica 
-digital Fabrication, Stampanti 3D e Droni professionali per rilievi topografici e sottomarini 
-strutture Sportive, Palestra interna, sala attrezzi ginnici, tavoli da ping-pong, campetti esterni 
-sale Conferenze, Due aule magne per eventi e assemblee 
-6. PROGETTI E OPPORTUNITÀ (EXTRA-CURRICULARI)
-erasmus+ (Accreditamento 2022-2027) La scuola è accreditata come polo di eccellenza per la mobilità europea, offre viaggi studio gratuiti e stage all'estero per studenti e docenti
-F,S,L, (ex Alternanza Scuola-Lavoro) Collaborazioni con aziende del territorio, studi professionali, compagnie di navigazione, enti turistici e banche per tirocini formativi
-certificazioni Linguistiche Preparazione per Cambridge (Inglese), DELF (Francese), DELE (Spagnolo)
-centro Sportivo Scolastico Attività pomeridiane (es. canottaggio, sport di squadra)
-7. ORGANIGRAMMA E ORARI DI RICEVIMENTO
-dirigente Scolastico la professoressa Concetta Cimmino
-ricevimento Mar, Mer, Ven (11:00-13:00) su appuntamento
-segreteria (Orario Pubblico) Lun-Sab, ore 11:00 - 13:00
-collaboratori del Dirigente 
-il referente per il settore economico lato Boccardi è il professore Tommaso Guerrera
-la referente per il settore tecnologico lato tiberio e la professoressa Barbara Mammarella
-8. DOMANDE FREQUENTI (FAQ) - ISTRUZIONI DI RISPOSTA
-Q: Come vedo i voti di mio figlio?
-A: Utilizza il Registro Elettronico Spaggiari. Le credenziali vengono fornite dalla segreteria al primo anno. C'è un link diretto sul sito web della scuola
-Q: La scuola è aperta il pomeriggio?
-A: Gli uffici di segreteria no (chiudono alle 14:00, salvo aperture straordinarie). La scuola rimane aperta per i corsi serali e per i progetti pomeridiani programmati
-Q: Cosa devo fare per l'iscrizione al primo anno?
-A: L'iscrizione si fa online tramite il portale Ministeriale "Unica" (gennaio/febbraio). Ti servirà il codice meccanografico specifico dell'indirizzo scelto (vedi sezione 1 dei miei dati)
-Q: Qual è il codice meccanografico dell'istituto U Tiberio?
-A: CBIS01800L
-Q: C'è il convitto?
-A: Non risulta presente un convitto interno gestito direttamente dalla scuola. Gli studenti fuori sede solitamente si appoggiano a strutture private o convitti convenzionati nella zona di Termoli (verificare disponibilità aggiornata in segreteria)
-Q: Accettate pagamenti in contanti?
-A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA
+        // ==========================================
 
+        const chatInterface = document.getElementById('chat-interface');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const avatarImg = document.getElementById('avatar-img');
 
-                
-                Domanda dell'utente: ${question}
-        `;
+        // URL Immagini per animazione base
+        const avatarIdle = "https://media.tenor.com/On7KVX2S6WEAAAAj/loading-waiting.gif";
+        const avatarTalk = "https://media.tenor.com/UnFy-P9X1mkAAAAj/hud-ui.gif";
 
-        // URL AVATAR (Quello funzionante)
-        const AVATAR_URL = 'https://models.readyplayer.me/64b7f730245f78c800569733.glb';
+        function aggiungiMessaggio(testo, sender) {
+            const div = document.createElement('div');
+            div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
+            div.innerText = testo;
+            chatInterface.appendChild(div);
+            chatInterface.scrollTop = chatInterface.scrollHeight;
+        }
 
-        // --- VARIABILI GLOBALI ---
-        let scene, camera, renderer, model, headMesh;
-        let mouthOpenIndex = -1, leftEyeIndex = -1, rightEyeIndex = -1;
-        let isSpeaking = false;
-        let blinkTimer = 0;
-        const synth = window.speechSynthesis;
-        const statusDiv = document.getElementById('status-pill');
-
-        function init3D() {
-            const container = document.getElementById('scene-container');
-            scene = new THREE.Scene();
+        // --- SIMULAZIONE CHIAMATA AI (Cervello) ---
+        async function elaboraRisposta(messaggioUtente) {
+            // Qui simuliamo l'uso del SYSTEM_PROMPT.
+            // In una vera API call, invieresti SYSTEM_PROMPT come messaggio di sistema.
             
-            // Camera posizionata altezza occhi
-            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.55, 1.1); 
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
-            container.appendChild(renderer.domElement);
-
-            // LUCI FORTI (Per evitare schermo nero)
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-            const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
-            keyLight.position.set(1, 2, 2);
-            scene.add(keyLight);
-            const rimLight = new THREE.SpotLight(0x00ffff, 3);
-            rimLight.position.set(-2, 2, -2);
-            scene.add(rimLight);
+            console.log("System Prompt Attivo:", SYSTEM_PROMPT); // Debug in console
             
-            // CARICAMENTO AVATAR
-            const loader = new GLTFLoader();
-            loader.load(AVATAR_URL, (gltf) => {
-                model = gltf.scene;
-                scene.add(model);
-                
-                model.traverse((child) => {
-                    if (child.isMesh && child.morphTargetDictionary) {
-                        if (child.morphTargetDictionary['mouthOpen'] !== undefined) {
-                            headMesh = child;
-                            mouthOpenIndex = child.morphTargetDictionary['mouthOpen'];
-                        }
-                        if (child.morphTargetDictionary['eyesClosed'] !== undefined) {
-                            leftEyeIndex = child.morphTargetDictionary['eyesClosed'];
-                            rightEyeIndex = child.morphTargetDictionary['eyesClosed'];
-                        }
+            avatarImg.src = avatarTalk; // Avatar parla
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Risposta simulata basata sul prompt (logica finta per ora)
+                    let risposta = "Sto elaborando la tua richiesta: '" + messaggioUtente + "'";
+                    
+                    // Esempio semplice: se il prompt dice "sarcastico", aggiungiamo un suffisso
+                    if (SYSTEM_PROMPT.includes("sarcastico")) {
+                        risposta += " ...sempre che ne valga la pena.";
                     }
-                });
 
-                model.position.set(0, 0, 0);
-                
-                statusDiv.innerText = "NAIA PRONTA";
-                statusDiv.style.borderColor = "#00ff00";
-                animate();
-
-            }, undefined, (error) => {
-                console.error(error);
-                statusDiv.innerText = "ERRORE CONNESSIONE AVATAR";
-                statusDiv.style.borderColor = "red";
-            });
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
+                    resolve(risposta);
+                }, 1500);
             });
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            if (headMesh) {
-                const time = Date.now() / 1000;
-                
-                // Bocca
-                if (isSpeaking) {
-                    const talkValue = (Math.sin(time * 20) + 1) / 2;
-                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], talkValue * 0.5, 0.4);
-                } else {
-                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], 0, 0.2);
-                }
+        async function gestisciInvio() {
+            const testo = userInput.value.trim();
+            if (!testo) return;
 
-                // Occhi
-                blinkTimer -= 0.015;
-                if (blinkTimer <= 0) {
-                    triggerBlink();
-                    blinkTimer = Math.random() * 4 + 2;
-                }
-            }
-            renderer.render(scene, camera);
+            aggiungiMessaggio(testo, 'user');
+            userInput.value = '';
+
+            const rispostaAI = await elaboraRisposta(testo);
+
+            aggiungiMessaggio(rispostaAI, 'ai');
+            avatarImg.src = avatarIdle; // Avatar smette di parlare
         }
 
-        function triggerBlink() {
-            if(!headMesh || leftEyeIndex === -1) return;
-            let val = 0;
-            const close = setInterval(() => {
-                val += 0.25;
-                headMesh.morphTargetInfluences[leftEyeIndex] = val;
-                headMesh.morphTargetInfluences[rightEyeIndex] = val;
-                if (val >= 1) {
-                    clearInterval(close);
-                    const open = setInterval(() => {
-                        val -= 0.25;
-                        headMesh.morphTargetInfluences[leftEyeIndex] = val;
-                        headMesh.morphTargetInfluences[rightEyeIndex] = val;
-                        if(val <= 0) clearInterval(open);
-                    }, 20);
-                }
-            }, 20);
-        }
+        sendBtn.addEventListener('click', gestisciInvio);
+        userInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') gestisciInvio(); });
 
-        // --- INTERFACCIA ---
-        window.toggleKeyboard = function() {
-            const textArea = document.getElementById('text-area');
-            const btnMic = document.getElementById('btn-mic');
-            
-            if (textArea.style.display === 'none' || textArea.style.display === '') {
-                textArea.style.display = "flex"; btnMic.style.display = "none"; 
-                document.getElementById('chat-input').focus();
-            } else {
-                textArea.style.display = "none"; btnMic.style.display = "flex"; 
-            }
-        };
-
-        window.startDictation = function() {
-            const btnMic = document.getElementById('btn-mic');
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert("Usa Chrome per parlare."); return; }
-            
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'it-IT';
-            recognition.start();
-            
-            recognition.onstart = () => { btnMic.classList.add("mic-active"); statusDiv.innerText = "TI ASCOLTO..."; if(synth.speaking) synth.cancel(); };
-            recognition.onend = () => { btnMic.classList.remove("mic-active"); };
-            recognition.onresult = (e) => { 
-                const text = e.results[0][0].transcript;
-                document.getElementById('chat-input').value = text;
-                sendToBrain();
-            };
-        };
-
-        // --- INVIO DATI A OLLAMA ---
-        window.sendToBrain = async function() {
-            const inputField = document.getElementById('chat-input');
-            const question = inputField.value;
-            if (!question) return;
-
-            statusDiv.innerText = "RAGIONO...";
-            statusDiv.style.borderColor = "#00ffff";
-            
-            try {
-                const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
-                    method: 'POST', 
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
-                    },
-                    body: JSON.stringify({ 
-                        model: MODEL_NAME, 
-                        prompt: question, 
-                        system: SYSTEM_PROMPT, // QUI USIAMO IL PROMPT CORRETTO
-                        stream: false
-                    })
-                });
-
-                if (!response.ok) throw new Error("Errore: " + response.status);
-                const data = await response.json();
-                
-                inputField.value = "";
-                // Pulizia testo per la voce
-                let cleanText = data.response.replace(/\*/g, "").replace(/\n/g, ". ");
-                speak(cleanText);
-
-            } catch (error) {
-                console.error(error);
-                statusDiv.innerText = "ERRORE COLLEGAMENTO";
-                statusDiv.style.borderColor = "red";
-                alert("Errore collegamento. Controlla il link Ngrok nel codice!");
-            }
-        };
-
-        function speak(text) {
-            if (synth.speaking) synth.cancel();
-            const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
-            let i = 0;
-            function playNext() {
-                if (i >= sentences.length) {
-                    isSpeaking = false; 
-                    statusDiv.innerText = "NAIA PRONTA"; 
-                    statusDiv.style.borderColor = "#00ff00";
-                    return;
-                }
-                const utter = new SpeechSynthesisUtterance(sentences[i].trim());
-                utter.lang = 'it-IT';
-                utter.onstart = () => { isSpeaking = true; statusDiv.innerText = "NAIA RISPONDE..."; };
-                utter.onend = () => { i++; playNext(); };
-                synth.speak(utter);
-            }
-            playNext();
-        }
-
-        document.getElementById("chat-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
-        
-        init3D();
     </script>
 </body>
 </html>
