@@ -15,114 +15,86 @@
     </script>
 
     <style>
-        /* STILE GENERALE */
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
         
-        /* CONTENITORE 3D */
         #scene-container {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             z-index: 1;
         }
 
-        /* SCHERMATA DI CARICAMENTO */
         #loading {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #00ffff; font-size: 28px; font-weight: bold; z-index: 50;
-            text-shadow: 0 0 15px #00ffff; letter-spacing: 2px;
+            text-shadow: 0 0 15px #00ffff;
         }
 
-        /* LIVELLO INTERFACCIA (Sopra al 3D) */
-        #ui-layer {
-            position: absolute; 
-            bottom: 50px; 
-            left: 50%; 
-            transform: translateX(-50%);
-            width: 90%; 
-            max-width: 600px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 25px; 
-            z-index: 100; 
-            align-items: center;
+        /* --- ZONA SUPERIORE: STATUS --- */
+        #top-bar {
+            position: absolute;
+            top: 30px; /* In alto */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: none; 
         }
 
-        /* STATUS (La scritta sopra i bottoni) */
         #status { 
-            text-align: center; 
             color: #ffffff; 
             font-weight: 800; 
-            background: rgba(0, 0, 0, 0.85); 
+            background: rgba(0, 0, 0, 0.6); 
             padding: 15px 40px; 
             border-radius: 50px; 
             font-size: 20px; 
             border: 2px solid #00ffff; 
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); 
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4); 
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             backdrop-filter: blur(5px);
+            pointer-events: auto; /* Permette di selezionare il testo */
         }
 
-        /* BARRA DEI CONTROLLI */
+        /* --- ZONA INFERIORE: CONTROLLI --- */
+        #bottom-bar {
+            position: absolute;
+            bottom: 30px; /* In basso */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+
         .controls { 
             display: flex; gap: 20px; padding: 20px; 
-            background: rgba(30, 30, 30, 0.7); 
+            background: rgba(20, 20, 20, 0.8); 
             border-radius: 40px; 
-            backdrop-filter: blur(20px); 
+            backdrop-filter: blur(15px); 
             border: 1px solid rgba(255,255,255,0.15);
-            transition: all 0.3s ease;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            pointer-events: auto; /* Riattiva il click sui bottoni */
         }
 
-        /* PULSANTI GRANDI */
         button { 
             border: none; cursor: pointer; border-radius: 50%; 
-            width: 75px; height: 75px; 
-            font-size: 35px; 
-            transition: transform 0.1s, box-shadow 0.2s; 
+            width: 70px; height: 70px; 
+            font-size: 32px; 
+            transition: transform 0.1s; 
             display: flex; align-items: center; justify-content: center; 
         }
         button:active { transform: scale(0.95); }
         
-        /* Tasto Microfono */
-        #btn-mic { 
-            background: linear-gradient(135deg, #ff0055, #ff3377); 
-            color: #fff; 
-            box-shadow: 0 0 25px rgba(255, 0, 85, 0.5); 
-        }
-        .mic-active { 
-            animation: pulseMic 1.5s infinite; 
-            background: #ff0000 !important;
-            transform: scale(1.1); 
-        }
-        
-        /* Tasto Tastiera */
-        #btn-keyboard { 
-            background: #333; color: #fff; border: 2px solid #555; 
-        }
+        #btn-mic { background: linear-gradient(135deg, #ff0055, #ff3377); color: #fff; box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); }
+        .mic-active { animation: pulseMic 1.5s infinite; background: #ff0000 !important; transform: scale(1.1); }
+        #btn-keyboard { background: #333; color: #fff; border: 2px solid #555; }
+        #btn-send { background: #00ffff; color: #000; width: 60px; height: 60px; font-size: 26px; margin-left: 10px; }
 
-        /* Tasto Invia */
-        #btn-send { 
-            background: #00ffff; color: #000; 
-            width: 65px; height: 65px; font-size: 28px; 
-            margin-left: 10px;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
-        }
-
-        /* AREA TESTO (Nascosta all'inizio) */
-        #text-area { 
-            display: none; flex: 1; align-items: center; 
-            animation: fadeIn 0.3s ease; width: 100%; 
-        }
-        input { 
-            width: 100%; padding: 20px; border-radius: 30px; border: 2px solid #555; 
-            background: rgba(0,0,0,0.9); color: white; font-size: 18px; outline: none; 
-        }
-        input:focus { border-color: #00ffff; }
+        #text-area { display: none; flex: 1; align-items: center; animation: fadeIn 0.3s ease; width: 100%; }
+        input { width: 100%; padding: 15px; border-radius: 30px; border: 2px solid #555; background: rgba(0,0,0,0.9); color: white; font-size: 18px; outline: none; }
 
         @keyframes fadeIn { from { opacity: 0; width: 0; } to { opacity: 1; width: 100%; } }
         @keyframes pulseMic { 0% { box-shadow: 0 0 20px rgba(255,0,0,0.5); } 50% { box-shadow: 0 0 60px rgba(255,0,0,0.8); } 100% { box-shadow: 0 0 20px rgba(255,0,0,0.5); } }
-
     </style>
 </head>
 <body>
@@ -130,247 +102,38 @@
     <div id="scene-container"></div>
     <div id="loading">STO PREPARANDO L'AULA...</div>
 
-    <div id="ui-layer">
-        <div id="status">NAIA SI STA SVEGLIANDO...</div>
-        
+    <div id="top-bar">
+        <div id="status">NAIA SI SVEGLIA...</div>
+    </div>
+
+    <div id="bottom-bar">
         <div class="controls" id="controls-bar">
             <button id="btn-keyboard" onclick="toggleKeyboard()">⌨️</button>
-            
             <button id="btn-mic" onclick="startDictation()">🎤</button>
-
             <div id="text-area">
-                <input type="text" id="chat-input" placeholder="Chiedi qualcosa sulla scuola..." autocomplete="off">
+                <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
                 <button id="btn-send" onclick="sendToBrain()">➤</button>
             </div>
         </div>
     </div>
 
     <script type="module">
-        // 1. IMPORTAZIONE THREE.JS
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // ============================================================
-        // CONFIGURAZIONE (Aggiorna NGROK qui!)
+        // CONFIGURAZIONE
         // ============================================================
+        // 1. INCOLLA QUI L'ULTIMO INDIRIZZO NGROK
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
+        
+        // 2. ASSICURATI DI AVERE QUESTO MODELLO SU OLLAMA
+        // Se non sei sicuro, usa "llama3" o "mistral"
         const MODEL_NAME = "naia_school"; 
+        
         const AVATAR_URL = 'https://models.readyplayer.me/697e442c05b43df7aab5a152.glb';
 
-        // Variabili 3D
-        let scene, camera, renderer, model, headMesh;
-        let mouthOpenIndex = -1;
-        let leftEyeIndex = -1, rightEyeIndex = -1;
-        
-        // Stati
-        let isSpeaking = false;
-        let blinkTimer = 0;
-        const synth = window.speechSynthesis;
-        const statusDiv = document.getElementById('status');
-
-        // ============================================================
-        // INIZIO MONDO 3D
-        // ============================================================
-       function init3D() {
-            const container = document.getElementById('scene-container');
-            
-            scene = new THREE.Scene();
-            
-            // 1. CORREZIONE COORDINATE
-            // Mettiamo la camera esattamente all'altezza degli occhi di un avatar standard (1.65m)
-            // Z = 0.8 è la distanza (circa 80cm dal viso, primo piano perfetto)
-            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.65, 0.8); 
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
-            renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
-
-            // 2. ILLUMINAZIONE "BEAUTY" (Potenziata)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
-            scene.add(ambientLight);
-            
-            const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
-            keyLight.position.set(1, 2, 2);
-            scene.add(keyLight);
-
-            const fillLight = new THREE.DirectionalLight(0xbfd6ff, 1.2); 
-            fillLight.position.set(-1, 1, 2);
-            scene.add(fillLight);
-
-            const rimLight = new THREE.DirectionalLight(0xffffff, 2.0);
-            rimLight.position.set(0, 2, -2);
-            scene.add(rimLight);
-
-            // CARICAMENTO AVATAR
-            const loader = new GLTFLoader();
-            loader.load(AVATAR_URL, (gltf) => {
-                model = gltf.scene;
-                scene.add(model);
-                
-                // MORPH TARGETS (Espressioni)
-                model.traverse((child) => {
-                    if (child.isMesh && child.morphTargetDictionary) {
-                        if (child.morphTargetDictionary['mouthOpen'] !== undefined) {
-                            headMesh = child;
-                            mouthOpenIndex = child.morphTargetDictionary['mouthOpen'];
-                        }
-                        if (child.morphTargetDictionary['eyesClosed'] !== undefined) {
-                            leftEyeIndex = child.morphTargetDictionary['eyesClosed'];
-                            rightEyeIndex = child.morphTargetDictionary['eyesClosed'];
-                        }
-                    }
-                });
-
-                // 3. POSIZIONAMENTO SICURO
-                // La mettiamo a ZERO (sul pavimento).
-                // Così siamo sicuri che la testa sia a 1.6m - 1.7m
-                model.position.set(0, 0, 0); 
-                
-                model.rotation.y = 0.05; // Leggera rotazione artistica
-
-                document.getElementById('loading').style.display = 'none';
-                statusDiv.innerText = "NAIA PRONTA";
-
-            }, undefined, (e) => {
-                console.error(e);
-                statusDiv.innerText = "ERRORE CARICAMENTO";
-            });
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-
-            animate();
-        }
-        // LOOP ANIMAZIONE
-        function animate() {
-            requestAnimationFrame(animate);
-
-            if (headMesh) {
-                const time = Date.now() / 1000;
-
-                // LOGICA BOCCA (LIP SYNC)
-                if (isSpeaking) {
-                    const talkValue = (Math.sin(time * 15) + 1) / 2; // Onda sinusoidale veloce
-                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], talkValue * 0.7, 0.5);
-                } else {
-                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], 0, 0.2);
-                }
-
-                // LOGICA OCCHI (BLINK)
-                blinkTimer -= 0.015;
-                if (blinkTimer <= 0) {
-                    triggerBlink();
-                    blinkTimer = Math.random() * 4 + 2; // Blink ogni 2-6 secondi
-                }
-            }
-            renderer.render(scene, camera);
-        }
-
-        function triggerBlink() {
-            if(!headMesh || leftEyeIndex === -1) return;
-            let val = 0;
-            // Animazione chiusura
-            const close = setInterval(() => {
-                val += 0.2;
-                if (val >= 1) {
-                    clearInterval(close);
-                    // Animazione apertura
-                    const open = setInterval(() => {
-                        val -= 0.2;
-                        headMesh.morphTargetInfluences[leftEyeIndex] = val;
-                        headMesh.morphTargetInfluences[rightEyeIndex] = val;
-                        if(val <= 0) clearInterval(open);
-                    }, 20);
-                }
-                headMesh.morphTargetInfluences[leftEyeIndex] = val;
-                headMesh.morphTargetInfluences[rightEyeIndex] = val;
-            }, 20);
-        }
-
-        init3D();
-
-        // ============================================================
-        // ESPORTA FUNZIONI PER L'HTML
-        // ============================================================
-        window.toggleKeyboard = toggleKeyboard;
-        window.startDictation = startDictation;
-        window.sendToBrain = sendToBrain;
-
-        // UI TOGGLE
-        let isKeyboardOpen = false;
-        function toggleKeyboard() {
-            const textArea = document.getElementById('text-area');
-            const btnMic = document.getElementById('btn-mic');
-            const inputField = document.getElementById('chat-input');
-            const controlsBar = document.getElementById('controls-bar');
-            if (!isKeyboardOpen) {
-                textArea.style.display = "flex"; btnMic.style.display = "none"; controlsBar.style.width = "90%"; inputField.focus(); isKeyboardOpen = true;
-            } else {
-                textArea.style.display = "none"; btnMic.style.display = "flex"; controlsBar.style.width = "auto"; isKeyboardOpen = false;
-            }
-        }
-
-        // ============================================================
-        // LOGICA VOCALE & CERVELLO (PRESERVATA)
-        // ============================================================
-
-        function speak(text) {
-            if (synth.speaking) synth.cancel();
-            const allVoices = synth.getVoices();
-            const itVoices = allVoices.filter(v => v.lang.includes("it"));
-            const femaleVoice = itVoices.find(v => v.name.includes("Google")) || itVoices.find(v => v.name.includes("Elsa")) || itVoices.find(v => v.name.includes("Alice")) || itVoices[0];
-            const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
-            playNextSentence(sentences, 0, femaleVoice);
-        }
-
-        function playNextSentence(sentences, index, voiceObj) {
-            if (index >= sentences.length) {
-                statusDiv.innerText = "NAIA PRONTA";
-                isSpeaking = false; // FERMA BOCCA
-                return;
-            }
-            const textToSay = sentences[index].trim();
-            if(!textToSay) { playNextSentence(sentences, index + 1, voiceObj); return; }
-       
-            const utterance = new SpeechSynthesisUtterance(textToSay);
-            if (voiceObj) utterance.voice = voiceObj;
-            utterance.lang = 'it-IT'; utterance.rate = 1.0; utterance.pitch = 1.0;
-       
-            utterance.onstart = () => {
-                isSpeaking = true; // MUOVI BOCCA
-                statusDiv.innerText = "NAIA PARLA...";
-            };
-            utterance.onend = () => { playNextSentence(sentences, index + 1, voiceObj); };
-            utterance.onerror = () => { playNextSentence(sentences, index + 1, voiceObj); };
-            synth.speak(utterance);
-        }
-
-        function startDictation() {
-            const btnMic = document.getElementById('btn-mic');
-            const inputField = document.getElementById('chat-input');
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert("Usa Chrome."); return; }
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'it-IT';
-            recognition.start();
-            recognition.onstart = function() { btnMic.classList.add("mic-active"); if(synth.speaking) synth.cancel(); };
-            recognition.onend = function() { btnMic.classList.remove("mic-active"); if(inputField.value) sendToBrain(); };
-            recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
-        }
-
-        async function sendToBrain() {
-            const inputField = document.getElementById('chat-input');
-            const question = inputField.value;
-            if (!question) return;
-       
-            // IL TUO COPIONE ORIGINALE
-            const SYSTEM_INSTRUCTION = `
+        const SYSTEM_PROMPT = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
@@ -472,32 +235,215 @@ Q: C'è il convitto?
 A: Non risulta presente un convitto interno gestito direttamente dalla scuola. Gli studenti fuori sede solitamente si appoggiano a strutture private o convitti convenzionati nella zona di Termoli (verificare disponibilità aggiornata in segreteria)
 Q: Accettate pagamenti in contanti?
 A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA
-            `;
 
-            statusDiv.innerText = "PENSO...";
-            if(isKeyboardOpen) toggleKeyboard(); // Chiude tastiera per pulizia (facoltativo)
+
+                
+                Domanda dell'utente: ${question}
+           `;
+
+        let scene, camera, renderer, model, headMesh;
+        let mouthOpenIndex = -1, leftEyeIndex = -1, rightEyeIndex = -1;
+        let isSpeaking = false;
+        let blinkTimer = 0;
+        const synth = window.speechSynthesis;
+        const statusDiv = document.getElementById('status');
+
+        function init3D() {
+            const container = document.getElementById('scene-container');
+            scene = new THREE.Scene();
+            
+            // Camera calibrata
+            camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.60, 0.85); 
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
+            scene.add(ambientLight);
+            const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+            keyLight.position.set(1, 2, 2);
+            scene.add(keyLight);
+            const fillLight = new THREE.DirectionalLight(0xddeeff, 1.2); 
+            fillLight.position.set(-1.5, 1, 2);
+            scene.add(fillLight);
+            const rimLight = new THREE.DirectionalLight(0xffffff, 2.5);
+            rimLight.position.set(0, 3, -3);
+            scene.add(rimLight);
+
+            const loader = new GLTFLoader();
+            loader.load(AVATAR_URL, (gltf) => {
+                model = gltf.scene;
+                scene.add(model);
+                model.traverse((child) => {
+                    if (child.isMesh && child.morphTargetDictionary) {
+                        if (child.morphTargetDictionary['mouthOpen'] !== undefined) {
+                            headMesh = child;
+                            mouthOpenIndex = child.morphTargetDictionary['mouthOpen'];
+                        }
+                        if (child.morphTargetDictionary['eyesClosed'] !== undefined) {
+                            leftEyeIndex = child.morphTargetDictionary['eyesClosed'];
+                            rightEyeIndex = child.morphTargetDictionary['eyesClosed'];
+                        }
+                    }
+                });
+                model.position.set(0, 0, 0); 
+                model.rotation.y = 0.05;
+                document.getElementById('loading').style.display = 'none';
+                statusDiv.innerText = "NAIA PRONTA";
+            }, undefined, (e) => {
+                console.error(e);
+                statusDiv.innerText = "ERRORE GRAFICA";
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (headMesh) {
+                const time = Date.now() / 1000;
+                if (isSpeaking) {
+                    const talkValue = (Math.sin(time * 25) + 1) / 2;
+                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], talkValue * 0.7, 0.5);
+                } else {
+                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], 0, 0.2);
+                }
+                blinkTimer -= 0.015;
+                if (blinkTimer <= 0) {
+                    triggerBlink();
+                    blinkTimer = Math.random() * 4 + 2;
+                }
+            }
+            renderer.render(scene, camera);
+        }
+
+        function triggerBlink() {
+            if(!headMesh || leftEyeIndex === -1) return;
+            let val = 0;
+            const close = setInterval(() => {
+                val += 0.25;
+                if (val >= 1) {
+                    clearInterval(close);
+                    const open = setInterval(() => {
+                        val -= 0.25;
+                        headMesh.morphTargetInfluences[leftEyeIndex] = val;
+                        headMesh.morphTargetInfluences[rightEyeIndex] = val;
+                        if(val <= 0) clearInterval(open);
+                    }, 20);
+                }
+                headMesh.morphTargetInfluences[leftEyeIndex] = val;
+                headMesh.morphTargetInfluences[rightEyeIndex] = val;
+            }, 20);
+        }
+
+        init3D();
+
+        window.toggleKeyboard = toggleKeyboard;
+        window.startDictation = startDictation;
+        window.sendToBrain = sendToBrain;
+
+        let isKeyboardOpen = false;
+        function toggleKeyboard() {
+            const textArea = document.getElementById('text-area');
+            const btnMic = document.getElementById('btn-mic');
+            const inputField = document.getElementById('chat-input');
+            const controlsBar = document.getElementById('controls-bar');
+            
+            if (!isKeyboardOpen) {
+                textArea.style.display = "flex"; btnMic.style.display = "none"; controlsBar.style.width = "90%"; inputField.focus(); isKeyboardOpen = true;
+            } else {
+                textArea.style.display = "none"; btnMic.style.display = "flex"; controlsBar.style.width = "auto"; isKeyboardOpen = false;
+            }
+        }
+
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const allVoices = synth.getVoices();
+            const itVoices = allVoices.filter(v => v.lang.includes("it"));
+            const voice = itVoices.find(v => v.name.includes("Google")) || itVoices[0];
+            const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
+            playNextSentence(sentences, 0, voice);
+        }
+
+        function playNextSentence(sentences, index, voiceObj) {
+            if (index >= sentences.length) {
+                statusDiv.innerText = "NAIA PRONTA";
+                isSpeaking = false;
+                return;
+            }
+            const textToSay = sentences[index].trim();
+            if(!textToSay) { playNextSentence(sentences, index + 1, voiceObj); return; }
+       
+            const utterance = new SpeechSynthesisUtterance(textToSay);
+            if (voiceObj) utterance.voice = voiceObj;
+            utterance.lang = 'it-IT'; utterance.rate = 1.05;
+            utterance.onstart = () => { isSpeaking = true; statusDiv.innerText = "NAIA RISPONDE..."; };
+            utterance.onend = () => { playNextSentence(sentences, index + 1, voiceObj); };
+            utterance.onerror = () => { playNextSentence(sentences, index + 1, voiceObj); };
+            synth.speak(utterance);
+        }
+
+        function startDictation() {
+            const btnMic = document.getElementById('btn-mic');
+            const inputField = document.getElementById('chat-input');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("Usa Chrome."); return; }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'it-IT';
+            recognition.start();
+            recognition.onstart = function() { btnMic.classList.add("mic-active"); statusDiv.innerText = "ASCOLTO..."; if(synth.speaking) synth.cancel(); };
+            recognition.onend = function() { btnMic.classList.remove("mic-active"); if(inputField.value) sendToBrain(); else statusDiv.innerText = "NAIA PRONTA"; };
+            recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
+        }
+
+        async function sendToBrain() {
+            const inputField = document.getElementById('chat-input');
+            const question = inputField.value;
+            if (!question) return;
+
+            statusDiv.innerText = "RAGIONO...";
+            if(isKeyboardOpen) toggleKeyboard();
+
+            console.log("Invio a:", OLLAMA_HOST); 
 
             try {
                 const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: MODEL_NAME, prompt: question, system: SYSTEM_INSTRUCTION, stream: false, options: { temperature: 0.1, num_predict: 400 } })
+                    method: 'POST', 
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        // QUESTA RIGA È FONDAMENTALE PER NGROK:
+                        'ngrok-skip-browser-warning': 'true' 
+                    },
+                    body: JSON.stringify({ 
+                        model: MODEL_NAME, 
+                        prompt: question, 
+                        system: SYSTEM_PROMPT, 
+                        stream: false, 
+                        options: { temperature: 0.3, num_predict: 200 } 
+                    })
                 });
-                if (!response.ok) throw new Error("Errore Network");
+
+                if (!response.ok) throw new Error("Errore Network: " + response.status);
                 const data = await response.json();
                 
-                let cleanText = data.response;
-                cleanText = cleanText.replace(/\*/g, "").replace(/[#_`~]/g, "");
-                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, m => m.replace(/@/g, " chiocciola ").replace(/\./g, " punto "));
-                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, m => m.replace(/\./g, " punto "));
-                cleanText = cleanText.replace(/\n/g, ". ").replace(/Sono NAIA,?/gi, "");
-                
+                let cleanText = data.response.replace(/\*/g, "").replace(/\n/g, ". ");
                 inputField.value = "";
                 speak(cleanText);
 
             } catch (error) {
-                console.error(error);
-                statusDiv.innerText = "ERRORE";
-                speak("Ho un problema di connessione.");
+                console.error("ERRORE:", error);
+                // Qui mostriamo l'errore a schermo così capisci cosa succede
+                statusDiv.innerText = "ERRORE: " + error.message; 
+                alert("Non riesco a collegarmi. Premi F12 e guarda la Console.");
             }
         }
         
@@ -505,7 +451,3 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
-
-
-
-
