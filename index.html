@@ -32,7 +32,7 @@
         /* --- ZONA SUPERIORE: STATUS --- */
         #top-bar {
             position: absolute;
-            top: 30px; /* In alto */
+            top: 40px; 
             width: 100%;
             display: flex;
             justify-content: center;
@@ -52,13 +52,13 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             backdrop-filter: blur(5px);
-            pointer-events: auto; /* Permette di selezionare il testo */
+            pointer-events: auto;
         }
 
         /* --- ZONA INFERIORE: CONTROLLI --- */
         #bottom-bar {
             position: absolute;
-            bottom: 30px; /* In basso */
+            bottom: 40px;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -73,7 +73,7 @@
             backdrop-filter: blur(15px); 
             border: 1px solid rgba(255,255,255,0.15);
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            pointer-events: auto; /* Riattiva il click sui bottoni */
+            pointer-events: auto;
         }
 
         button { 
@@ -124,15 +124,16 @@
         // ============================================================
         // CONFIGURAZIONE
         // ============================================================
-        // 1. INCOLLA QUI L'ULTIMO INDIRIZZO NGROK
+        
+        // !!! INCOLLA QUI IL NUOVO NGROK !!!
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         
-        // 2. ASSICURATI DI AVERE QUESTO MODELLO SU OLLAMA
-        // Se non sei sicuro, usa "llama3" o "mistral"
-        const MODEL_NAME = "naia_school"; 
-        
+        const MODEL_NAME = "naia_school"; // Usa il tuo modello se esiste, altrimenti "llama3"
         const AVATAR_URL = 'https://models.readyplayer.me/697e442c05b43df7aab5a152.glb';
 
+        // ============================================================
+        // IL PROMPT DI SCUOLA (INSERITO QUI)
+        // ============================================================
         const SYSTEM_PROMPT = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
@@ -239,7 +240,8 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 
                 
                 Domanda dell'utente: ${question}
-           `;
+
+        `;
 
         let scene, camera, renderer, model, headMesh;
         let mouthOpenIndex = -1, leftEyeIndex = -1, rightEyeIndex = -1;
@@ -254,7 +256,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             
             // Camera calibrata
             camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.60, 0.85); 
+            camera.position.set(0, 1.62, 0.85); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -413,15 +415,12 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             statusDiv.innerText = "RAGIONO...";
             if(isKeyboardOpen) toggleKeyboard();
 
-            console.log("Invio a:", OLLAMA_HOST); 
-
             try {
                 const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
                     method: 'POST', 
                     headers: { 
                         'Content-Type': 'application/json',
-                        // QUESTA RIGA È FONDAMENTALE PER NGROK:
-                        'ngrok-skip-browser-warning': 'true' 
+                        'ngrok-skip-browser-warning': 'true' // FONDAMENTALE
                     },
                     body: JSON.stringify({ 
                         model: MODEL_NAME, 
@@ -441,9 +440,8 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 
             } catch (error) {
                 console.error("ERRORE:", error);
-                // Qui mostriamo l'errore a schermo così capisci cosa succede
-                statusDiv.innerText = "ERRORE: " + error.message; 
-                alert("Non riesco a collegarmi. Premi F12 e guarda la Console.");
+                statusDiv.innerText = "ERRORE CONNESSIONE";
+                alert("Non riesco a collegarmi a Ollama. Controlla il link Ngrok!");
             }
         }
         
