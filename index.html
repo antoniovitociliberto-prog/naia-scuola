@@ -8,7 +8,8 @@
     <script type="importmap">
         {
             "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
             }
         }
     </script>
@@ -18,17 +19,18 @@
         
         #scene-container {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, #2a2a2a 0%, #000000 100%);
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             z-index: 1;
         }
 
         #loading {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #00ffff; font-size: 28px; font-weight: bold; z-index: 50;
-            text-shadow: 0 0 15px #00ffff; pointer-events: none;
+            text-shadow: 0 0 15px #00ffff;
+            text-align: center;
         }
 
-        /* --- ZONA SUPERIORE: STATUS --- */
+        /* BARRA IN ALTO */
         #top-bar {
             position: absolute; top: 40px; width: 100%; display: flex; justify-content: center; z-index: 100; pointer-events: none; 
         }
@@ -41,7 +43,7 @@
             pointer-events: auto;
         }
 
-        /* --- ZONA INFERIORE: CONTROLLI --- */
+        /* BARRA IN BASSO */
         #bottom-bar {
             position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; z-index: 100; pointer-events: none;
         }
@@ -73,10 +75,10 @@
 <body>
 
     <div id="scene-container"></div>
-    <div id="loading">AVVIO SISTEMA NAIA...</div>
+    <div id="loading">NAIA SI STA TRUCCANDO...<br><span style="font-size:16px">(Caricamento modello 3D)</span></div>
 
     <div id="top-bar">
-        <div id="status">SISTEMA OFFLINE</div>
+        <div id="status">SISTEMA IN AVVIO</div>
     </div>
 
     <div id="bottom-bar">
@@ -92,15 +94,20 @@
 
     <script type="module">
         import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // ============================================================
-        // !!! ATTENZIONE: INCOLLA QUI IL LINK NGROK AGGIORNATO !!!
+        // !!! INSERISCI QUI IL LINK NGROK AGGIORNATO !!!
         // ============================================================
-        const OLLAMA_HOST = 'https://INSERISCI_QUI_IL_TUO_LINK_NGROK.ngrok-free.app'; 
+        const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         
         const MODEL_NAME = "naia_school"; 
+        
+        // URL ORIGINALE DELL'AVATAR (Funzionava prima)
+        const AVATAR_URL = 'https://models.readyplayer.me/64b7f730245f78c800569733.glb';
 
-        const SYSTEM_PROMPT = `REGOLE FONDAMENTALI (OBBLIGATORIE):
+        const SYSTEM_PROMPT = `
+REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
 3. VIETATO USARE FORMATTAZIONE VISIVA: NIENTE ASTERISCHI (*), niente elenchi puntati, niente grassetti, niente titoli (#).
@@ -208,8 +215,10 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 
         `;
 
-        let scene, camera, renderer, avatarGroup, mouthMesh;
+        let scene, camera, renderer, model, headMesh;
+        let mouthOpenIndex = -1, leftEyeIndex = -1, rightEyeIndex = -1;
         let isSpeaking = false;
+        let blinkTimer = 0;
         const synth = window.speechSynthesis;
         const statusDiv = document.getElementById('status');
 
@@ -217,87 +226,102 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             const container = document.getElementById('scene-container');
             scene = new THREE.Scene();
             
-            // Camera
-            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 0, 4); // Posizione frontale
+            camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.55, 0.9); // Zoom sul viso
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
             container.appendChild(renderer.domElement);
 
             // Luci
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
-            scene.add(ambientLight);
-            const spotLight = new THREE.SpotLight(0x00ffff, 2);
-            spotLight.position.set(2, 5, 5);
-            scene.add(spotLight);
-            const fillLight = new THREE.DirectionalLight(0xff0080, 1);
-            fillLight.position.set(-2, 1, 3);
-            scene.add(fillLight);
-
-            // --- COSTRUZIONE AVATAR PROCEDURALE (No Download) ---
-            avatarGroup = new THREE.Group();
-
-            // 1. Testa
-            const headGeo = new THREE.SphereGeometry(0.6, 32, 32);
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0eeeeee, roughness: 0.3, metalness: 0.1 });
-            const head = new THREE.Mesh(headGeo, skinMat);
-            avatarGroup.add(head);
-
-            // 2. Occhi (Visore o Occhiali)
-            const visorGeo = new THREE.BoxGeometry(0.7, 0.15, 0.1);
-            const visorMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1, metalness: 0.8 });
-            const visor = new THREE.Mesh(visorGeo, visorMat);
-            visor.position.set(0, 0.1, 0.55);
-            avatarGroup.add(visor);
-
-            // 3. Bocca (che si muoverà)
-            const mouthGeo = new THREE.BoxGeometry(0.2, 0.05, 0.05);
-            const mouthMat = new THREE.MeshBasicMaterial({ color: 0x00ffff }); // Neon Blue
-            mouthMesh = new THREE.Mesh(mouthGeo, mouthMat);
-            mouthMesh.position.set(0, -0.25, 0.58);
-            avatarGroup.add(mouthMesh);
-
-            // 4. Collo e Corpo (Busto semplice)
-            const neckGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.4, 32);
-            const neck = new THREE.Mesh(neckGeo, skinMat);
-            neck.position.y = -0.6;
-            avatarGroup.add(neck);
-
-            const bodyGeo = new THREE.CylinderGeometry(0.2, 0.9, 1.5, 32);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = -1.5;
-            avatarGroup.add(body);
-
-            scene.add(avatarGroup);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            keyLight.position.set(1, 1, 2);
+            scene.add(keyLight);
             
-            // AVVIO COMPLETATO
-            document.getElementById('loading').style.display = 'none';
-            statusDiv.innerText = "NAIA PRONTA";
-            
-            animate();
+            // CARICAMENTO AVATAR
+            const loader = new GLTFLoader();
+            loader.load(AVATAR_URL, (gltf) => {
+                model = gltf.scene;
+                scene.add(model);
+                
+                // Trova la testa per muovere la bocca
+                model.traverse((child) => {
+                    if (child.isMesh && child.morphTargetDictionary) {
+                        if (child.morphTargetDictionary['mouthOpen'] !== undefined) {
+                            headMesh = child;
+                            mouthOpenIndex = child.morphTargetDictionary['mouthOpen'];
+                        }
+                        if (child.morphTargetDictionary['eyesClosed'] !== undefined) {
+                            leftEyeIndex = child.morphTargetDictionary['eyesClosed'];
+                            rightEyeIndex = child.morphTargetDictionary['eyesClosed'];
+                        }
+                    }
+                });
+
+                model.position.set(0, 0, 0);
+                
+                // RIMUOVI LOADING E MOSTRA "PRONTA"
+                document.getElementById('loading').style.display = 'none';
+                statusDiv.innerText = "NAIA PRONTA";
+                animate();
+
+            }, undefined, (error) => {
+                console.error(error);
+                document.getElementById('loading').innerHTML = "ERRORE CARICAMENTO AVATAR<br>Controlla Internet";
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            const time = Date.now() / 1000;
-            
-            // Animazione "Respiro"
-            avatarGroup.position.y = Math.sin(time * 1) * 0.05;
+            if (headMesh) {
+                const time = Date.now() / 1000;
+                
+                // Movimento bocca
+                if (isSpeaking) {
+                    const talkValue = (Math.sin(time * 25) + 1) / 2;
+                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], talkValue * 0.6, 0.5);
+                } else {
+                    headMesh.morphTargetInfluences[mouthOpenIndex] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIndex], 0, 0.2);
+                }
 
-            // Animazione Parlato
-            if (isSpeaking && mouthMesh) {
-                // La bocca si apre e chiude velocemente
-                const talkVal = (Math.sin(time * 30) + 1) / 2; // Valore tra 0 e 1
-                mouthMesh.scale.y = 1 + (talkVal * 4); // Scala da 1 a 5
-            } else if (mouthMesh) {
-                mouthMesh.scale.y = THREE.MathUtils.lerp(mouthMesh.scale.y, 1, 0.2);
+                // Sbattere le palpebre
+                blinkTimer -= 0.015;
+                if (blinkTimer <= 0) {
+                    triggerBlink();
+                    blinkTimer = Math.random() * 4 + 2;
+                }
             }
-
             renderer.render(scene, camera);
         }
 
+        function triggerBlink() {
+            if(!headMesh || leftEyeIndex === -1) return;
+            let val = 0;
+            const close = setInterval(() => {
+                val += 0.25;
+                headMesh.morphTargetInfluences[leftEyeIndex] = val;
+                headMesh.morphTargetInfluences[rightEyeIndex] = val;
+                if (val >= 1) {
+                    clearInterval(close);
+                    const open = setInterval(() => {
+                        val -= 0.25;
+                        headMesh.morphTargetInfluences[leftEyeIndex] = val;
+                        headMesh.morphTargetInfluences[rightEyeIndex] = val;
+                        if(val <= 0) clearInterval(open);
+                    }, 20);
+                }
+            }, 20);
+        }
+
+        // --- FUNZIONI INTERFACCIA ---
         window.toggleKeyboard = function() {
             const textArea = document.getElementById('text-area');
             const btnMic = document.getElementById('btn-mic');
@@ -329,6 +353,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             };
         };
 
+        // --- INVIO A OLLAMA (CON CORREZIONE NGROK) ---
         window.sendToBrain = async function() {
             const inputField = document.getElementById('chat-input');
             const question = inputField.value;
@@ -337,19 +362,17 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             statusDiv.innerText = "RAGIONO...";
             
             try {
-                console.log("Invio richiesta a:", OLLAMA_HOST);
                 const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
                     method: 'POST', 
                     headers: { 
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true' // Evita blocco Ngrok
+                        'ngrok-skip-browser-warning': 'true' // <--- LA CHIAVE DEL SUCCESSO
                     },
                     body: JSON.stringify({ 
                         model: MODEL_NAME, 
                         prompt: question, 
                         system: SYSTEM_PROMPT, 
-                        stream: false,
-                        options: { num_predict: 200 }
+                        stream: false
                     })
                 });
 
@@ -363,45 +386,30 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             } catch (error) {
                 console.error(error);
                 statusDiv.innerText = "ERRORE CONNESSIONE";
-                alert("Non riesco a collegarmi al cervello. Controlla il link Ngrok!");
+                alert("Errore collegamento. Controlla il link Ngrok nel codice!");
             }
         };
 
         function speak(text) {
             if (synth.speaking) synth.cancel();
-            
-            // Dividi le frasi per fluidità
             const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
             let i = 0;
-
             function playNext() {
                 if (i >= sentences.length) {
                     isSpeaking = false; statusDiv.innerText = "NAIA PRONTA"; return;
                 }
                 const utter = new SpeechSynthesisUtterance(sentences[i].trim());
                 utter.lang = 'it-IT';
-                utter.rate = 1.0;
-                
                 utter.onstart = () => { isSpeaking = true; statusDiv.innerText = "NAIA RISPONDE..."; };
                 utter.onend = () => { i++; playNext(); };
-                utter.onerror = () => { i++; playNext(); };
-                
                 synth.speak(utter);
             }
             playNext();
         }
 
-        init3D();
-        
-        // Gestione tasto Invio
         document.getElementById("chat-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
+        
+        init3D();
     </script>
 </body>
 </html>
