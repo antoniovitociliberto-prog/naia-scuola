@@ -301,7 +301,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 const data = await response.json();
                 
                 let rawText = data.response;
-                let cleanText = data.response;
+                //let cleanText = data.response;
                 // 1. TRADUTTORE EMAIL (La parte che volevi)
                 cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
                     return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
@@ -338,6 +338,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
