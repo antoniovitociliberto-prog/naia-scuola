@@ -181,9 +181,9 @@ SCHEDA INFORMATIVA SCUOLA:
 1. DATI IDENTIFICATIVI E AMMINISTRATIVI
 denominazione Ufficiale, Istituto di Istruzione Superiore Giovanni Boccardi / Ugo Tiberio
 via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86039 Termoli (C,B), Molise.
-pec (Posta Certificata) CBIS01800L@pec,punto,istruzione,punto,it
-email Istituzionale CBIS01800L@istruzione,punto,it
-sito Web www,punto,iisboccarditiberio,punto,edu,punto,it/
+pec (Posta Certificata) CBIS01800L@pec.istruzione.it
+email Istituzionale CBIS01800L@istruzione.it
+sito Web www.iisboccarditiberio.edu.it/
 2. STORIA E IDENTITÀ
 l'istituto nasce dalla fusione di due storiche scuole di Termoli
 l'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959).
@@ -191,16 +191,16 @@ l'Istituto Tecnico Tecnologico "Ugo Tiberio" (ex Nautico e Geometri, con il Naut
 certificazioni: L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), fondamentale per il riconoscimento dei titoli marittimi internazionali.
 3. OFFERTA FORMATIVA DETTAGLIATA
 l'istituto offre percorsi diurni (5 anni) e percorsi serali (istruzione per adulti).
-per il settore tecnologico Ugo Tiberio abbiamo a disposizione i seguenti corsi di studio
-c a i m, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina.
-c m n, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani).
-logistica, Gestione dei trasporti intermodali terra, mare e aria.
-c a t, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica.
-per il settore economico Giovanni Boccardi abbiamo a disposizione i seguenti corsi di studio
-a f m, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative.
-s i a, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia.
-r i m, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali.
-turismo, Percorso specifico per l'impresa turistica. Materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere.
+per il settore tecnologico Ugo Tiberio abbiamo a disposizione i seguenti corsi di studio:
+indirizzo c a i m, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina.
+indirizzo c m n, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani).
+indirizzo logistica, Gestione dei trasporti intermodali terra, mare e aria.
+indirizzo c a t, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica.
+per il settore economico Giovanni Boccardi abbiamo a disposizione i seguenti corsi di studio:
+indirizzo a f m, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative.
+indirizzi s i a, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia.
+indirizzo r i m, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali.
+indirizzo turismo, Percorso specifico per l'impresa turistica. Materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere.
 corsi SERALI Istruzione per Adulti
 percorsi abbreviati per lavoratori o chi vuole riprendere gli studi, attivi sia per l'indirizzo Economico che per il Tecnologico, in base al numero di iscritti.
 4. QUADRO ORARIO DISCIPLINE
@@ -301,7 +301,10 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 const data = await response.json();
                 
                 let rawText = data.response;
-            
+                
+                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                    return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
+                });
                 // 1. Cancella specificamente gli asterischi in ogni forma
                 let cleanText = rawText.replace(/\*/g, ""); 
                 
@@ -329,6 +332,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
