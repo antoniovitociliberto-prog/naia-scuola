@@ -121,39 +121,33 @@
             
             scene = new THREE.Scene();
             
-            // 1. INQUADRATURA PRIMO PIANO (Zoom sul viso)
-            // X=0 (Centro), Y=1.58 (Altezza occhi), Z=0.6 (Molto vicina)
+            // 1. CORREZIONE COORDINATE
+            // Mettiamo la camera esattamente all'altezza degli occhi di un avatar standard (1.65m)
+            // Z = 0.8 è la distanza (circa 80cm dal viso, primo piano perfetto)
             camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.58, 0.6); 
+            camera.position.set(0, 1.65, 0.8); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
-            // Aggiungiamo ombre morbide
             renderer.shadowMap.enabled = true;
             container.appendChild(renderer.domElement);
 
-            // 2. ILLUMINAZIONE DA STUDIO FOTOGRAFICO
-            // Luce ambientale soffusa
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
+            // 2. ILLUMINAZIONE "BEAUTY" (Potenziata)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
             scene.add(ambientLight);
             
-            // Luce principale (Key Light) - Davanti leggermente a destra
-            const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+            const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
             keyLight.position.set(1, 2, 2);
             scene.add(keyLight);
 
-            // Luce di riempimento (Fill Light) - Sinistra, più morbida, per togliere ombre dure dal naso
-            const fillLight = new THREE.DirectionalLight(0xbfd6ff, 1.0); // Leggermente azzurrina
+            const fillLight = new THREE.DirectionalLight(0xbfd6ff, 1.2); 
             fillLight.position.set(-1, 1, 2);
             scene.add(fillLight);
 
-            // Luce posteriore (Rim Light) - Per staccarla dallo sfondo (effetto capelli)
-            const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            const rimLight = new THREE.DirectionalLight(0xffffff, 2.0);
             rimLight.position.set(0, 2, -2);
             scene.add(rimLight);
-
-            // NIENTE PIÙ GRIGLIA SUL PAVIMENTO!
 
             // CARICAMENTO AVATAR
             const loader = new GLTFLoader();
@@ -161,15 +155,13 @@
                 model = gltf.scene;
                 scene.add(model);
                 
-                // Setup Morph Targets (Bocca e Occhi)
+                // MORPH TARGETS (Espressioni)
                 model.traverse((child) => {
                     if (child.isMesh && child.morphTargetDictionary) {
-                        // Bocca
                         if (child.morphTargetDictionary['mouthOpen'] !== undefined) {
                             headMesh = child;
                             mouthOpenIndex = child.morphTargetDictionary['mouthOpen'];
                         }
-                        // Occhi (Gestisce sia left che right se uniti, o separati)
                         if (child.morphTargetDictionary['eyesClosed'] !== undefined) {
                             leftEyeIndex = child.morphTargetDictionary['eyesClosed'];
                             rightEyeIndex = child.morphTargetDictionary['eyesClosed'];
@@ -177,12 +169,12 @@
                     }
                 });
 
-                // POSIZIONAMENTO FINE
-                // La abbassiamo leggermente per centrare perfettamente gli occhi
-                model.position.set(0, -1.6, 0); 
+                // 3. POSIZIONAMENTO SICURO
+                // La mettiamo a ZERO (sul pavimento).
+                // Così siamo sicuri che la testa sia a 1.6m - 1.7m
+                model.position.set(0, 0, 0); 
                 
-                // Rotazione leggera per renderla meno statica (la giriamo pochissimo)
-                model.rotation.y = 0.05;
+                model.rotation.y = 0.05; // Leggera rotazione artistica
 
                 document.getElementById('loading').style.display = 'none';
                 statusDiv.innerText = "NAIA PRONTA";
@@ -192,7 +184,6 @@
                 statusDiv.innerText = "ERRORE CARICAMENTO";
             });
 
-            // GESTIONE RIDIMENSIONAMENTO
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
@@ -459,5 +450,6 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
