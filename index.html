@@ -15,7 +15,7 @@
     </script>
 
     <style>
-        /* --- STILE GENERALE --- */
+        /* --- STILE DESIGN CYBER --- */
         body { margin: 0; overflow: hidden; background-color: #050505; font-family: 'Segoe UI', sans-serif; }
         
         #scene-container {
@@ -24,124 +24,63 @@
             z-index: 1;
         }
 
-        /* --- UI IN ALTO (SOPRA LA TESTA) --- */
+        /* --- UI IN ALTO (STATUS) --- */
         #top-ui {
-            position: absolute;
-            top: 50px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            z-index: 100;
-            pointer-events: none;
+            position: absolute; top: 50px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 100; pointer-events: none;
         }
 
         #status-pill {
-            background: rgba(0, 20, 30, 0.8);
+            background: rgba(0, 20, 30, 0.85);
             border: 2px solid #00ffff;
             color: #00ffff;
-            padding: 12px 30px;
+            padding: 12px 35px;
             border-radius: 30px;
-            font-weight: 700;
-            font-size: 18px;
-            letter-spacing: 2px;
+            font-weight: 700; font-size: 18px; letter-spacing: 2px;
             text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
             backdrop-filter: blur(10px);
             text-align: center;
+            transition: all 0.3s;
         }
 
         #subtitle {
-            color: #aaaaaa;
-            font-size: 14px;
-            text-shadow: 0 0 5px rgba(255,255,255,0.2);
-            font-weight: 400;
+            color: #888; font-size: 14px; text-shadow: 0 0 5px rgba(255,255,255,0.1); font-weight: 400; letter-spacing: 1px;
         }
 
         /* --- UI IN BASSO (CONTROLLI) --- */
         #bottom-ui {
-            position: absolute;
-            bottom: 40px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            z-index: 100;
-            pointer-events: none;
+            position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; z-index: 100; pointer-events: none;
         }
 
         .control-bar {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px 25px;
-            background: rgba(10, 10, 10, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; gap: 15px; padding: 15px 25px;
+            background: rgba(15, 15, 15, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 50px;
             backdrop-filter: blur(15px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
             pointer-events: auto;
-            transition: all 0.3s ease;
         }
 
-        /* Pulsanti */
         button {
-            border: none;
-            cursor: pointer;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+            border: none; cursor: pointer; border-radius: 50%; width: 60px; height: 60px;
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
             transition: transform 0.2s, background 0.2s;
         }
         button:active { transform: scale(0.9); }
 
-        #btn-mic {
-            background: linear-gradient(135deg, #ff0055, #ff3377);
-            color: white;
-            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
-        }
-        
-        .mic-listening {
-            animation: pulseRed 1.5s infinite;
-            background: #ff0000 !important;
-            transform: scale(1.1);
-        }
+        #btn-mic { background: linear-gradient(135deg, #ff0055, #ff3377); color: white; box-shadow: 0 0 15px rgba(255, 0, 85, 0.4); }
+        .mic-listening { animation: pulseRed 1.5s infinite; background: #ff0000 !important; transform: scale(1.1); }
+        #btn-keyboard { background: #333; color: #fff; border: 1px solid #555; }
+        #btn-send { background: #00ffff; color: #000; width: 50px; height: 50px; font-size: 20px; }
 
-        #btn-keyboard {
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-        }
-
-        #btn-send {
-            background: #00ffff;
-            color: #000;
-            width: 50px; height: 50px;
-            font-size: 20px;
-        }
-
-        /* Input testo */
+        /* Input testo a comparsa */
         #input-container {
-            display: none; /* Nascosto all'inizio */
-            flex-direction: row;
-            align-items: center;
-            gap: 10px;
-            animation: slideOpen 0.3s ease forwards;
+            display: none; align-items: center; gap: 10px; animation: slideOpen 0.3s ease forwards;
         }
-
         input {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 18px;
-            width: 250px;
-            border-bottom: 2px solid #555;
-            padding: 5px;
-            outline: none;
+            background: transparent; border: none; color: white; font-size: 18px; width: 250px;
+            border-bottom: 2px solid #555; padding: 5px; outline: none;
         }
         input:focus { border-bottom: 2px solid #00ffff; }
 
@@ -155,8 +94,8 @@
     <div id="scene-container"></div>
 
     <div id="top-ui">
-        <div id="status-pill">CARICAMENTO SISTEMA...</div>
-        <div id="subtitle">NAIA - Boccardi Tiberio AI Interface</div>
+        <div id="status-pill">SISTEMA IN AVVIO...</div>
+        <div id="subtitle">NAIA - AI Interface</div>
     </div>
 
     <div id="bottom-ui">
@@ -179,10 +118,11 @@
         // !!! CONFIGURAZIONE !!!
         // ============================================================
         
-        // >>> INCOLLA QUI IL TUO NUOVO LINK NGROK <<<
+        // >>> INSERISCI QUI IL TUO LINK NGROK <<<
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         
-        const AVATAR_URL = 'https://models.readyplayer.me/64b7f730245f78c800569733.glb'; // Avatar Funzionante
+        // Avatar Ragazza (Funzionante)
+        const AVATAR_URL = 'https://models.readyplayer.me/64b7f730245f78c800569733.glb'; 
         
         const SYSTEM_PROMPT = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
@@ -293,7 +233,6 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 
         `;
 
-        // Variabili Globali
         let scene, camera, renderer, model, headMesh;
         let mouthIndex = -1, leftEye = -1, rightEye = -1;
         let isSpeaking = false;
@@ -301,32 +240,30 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
         const synth = window.speechSynthesis;
         const statusEl = document.getElementById('status-pill');
 
-        // --- INIZIALIZZAZIONE 3D ---
         function init3D() {
             const container = document.getElementById('scene-container');
-            
             scene = new THREE.Scene();
             
-            // Camera
+            // --- FIX TELECAMERA: Posizionata all'altezza degli occhi ---
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 1.4, 1.2); // Inquadratura mezzo busto
+            camera.position.set(0, 1.6, 1.1); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping; 
             container.appendChild(renderer.domElement);
 
-            // Luci (Setup Cyber)
-            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            // --- LUCI POTENTI (Fondamentali per vedere l'avatar) ---
+            const ambient = new THREE.AmbientLight(0xffffff, 0.8); 
             scene.add(ambient);
             
-            const keyLight = new THREE.SpotLight(0xffffff, 5);
-            keyLight.position.set(2, 5, 5);
-            scene.add(keyLight);
+            const frontLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            frontLight.position.set(0, 2, 5);
+            scene.add(frontLight);
             
-            const rimLight = new THREE.SpotLight(0x00ffff, 10); // Luce blu da dietro
-            rimLight.position.set(-2, 3, -4);
+            const rimLight = new THREE.SpotLight(0x00ffff, 5); 
+            rimLight.position.set(-2, 3, -3);
             scene.add(rimLight);
 
             // Caricamento Modello
@@ -335,7 +272,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 model = gltf.scene;
                 scene.add(model);
                 
-                // Setup morph targets
+                // Setup movimenti facciali
                 model.traverse((child) => {
                     if (child.isMesh && child.morphTargetDictionary) {
                         if (child.morphTargetDictionary['mouthOpen'] !== undefined) {
@@ -349,31 +286,27 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                     }
                 });
 
-                model.position.y = -0.5; // Abbasso leggermente il modello
+                model.position.set(0, 0, 0);
+
                 statusEl.innerText = "NAIA PRONTA";
-                statusEl.style.borderColor = "#00ff00";
+                statusEl.style.borderColor = "#00ff00"; 
                 
                 animate();
             }, 
-            (xhr) => { 
-                statusEl.innerText = "CARICAMENTO... " + Math.round((xhr.loaded/xhr.total)*100) + "%"; 
-            },
+            undefined, 
             (error) => {
                 console.error(error);
                 statusEl.innerText = "ERRORE CARICAMENTO";
                 statusEl.style.borderColor = "red";
             });
 
-            window.addEventListener('resize', onWindowResize, false);
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // --- ANIMAZIONE LOOP ---
         function animate() {
             requestAnimationFrame(animate);
             const time = Date.now() / 1000;
@@ -423,12 +356,9 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             const input = document.getElementById('chat-input');
             
             if (inputContainer.style.display === 'flex') {
-                inputContainer.style.display = 'none';
-                btnMic.style.display = 'flex';
+                inputContainer.style.display = 'none'; btnMic.style.display = 'flex';
             } else {
-                inputContainer.style.display = 'flex';
-                btnMic.style.display = 'none';
-                input.focus();
+                inputContainer.style.display = 'flex'; btnMic.style.display = 'none'; input.focus();
             }
         };
 
@@ -437,10 +367,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             const btnMic = document.getElementById('btn-mic');
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             
-            if (!SpeechRecognition) {
-                alert("Il riconoscimento vocale funziona solo su Google Chrome.");
-                return;
-            }
+            if (!SpeechRecognition) { alert("Usa Google Chrome per la voce."); return; }
             
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
@@ -449,15 +376,12 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             recognition.onstart = () => {
                 btnMic.classList.add("mic-listening");
                 statusEl.innerText = "TI ASCOLTO...";
-                statusEl.style.color = "#ff0055";
                 statusEl.style.borderColor = "#ff0055";
                 if (synth.speaking) synth.cancel();
             };
 
-            recognition.onend = () => {
-                btnMic.classList.remove("mic-listening");
-            };
-
+            recognition.onend = () => { btnMic.classList.remove("mic-listening"); };
+            
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 document.getElementById('chat-input').value = transcript;
@@ -471,22 +395,13 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             if (!text) return;
 
             statusEl.innerText = "ELABORAZIONE...";
-            statusEl.style.color = "#00ffff";
             statusEl.style.borderColor = "#00ffff";
             
             try {
                 const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
-                    },
-                    body: JSON.stringify({
-                        model: "naia_school", // Usa "llama3" o il nome del tuo modello
-                        prompt: text,
-                        system: SYSTEM_PROMPT,
-                        stream: false
-                    })
+                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                    body: JSON.stringify({ model: "naia_school", prompt: text, system: SYSTEM_PROMPT, stream: false })
                 });
 
                 if (!response.ok) throw new Error("Errore API");
@@ -500,55 +415,37 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             } catch (err) {
                 console.error(err);
                 statusEl.innerText = "ERRORE CONNESSIONE";
-                statusEl.style.color = "red";
                 statusEl.style.borderColor = "red";
-                alert("Verifica che Ngrok sia attivo e il link corretto nel codice!");
+                alert("Controlla il link Ngrok!");
             }
         };
 
         function speak(text) {
             if (synth.speaking) synth.cancel();
-
             const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
             let index = 0;
 
             function playNext() {
                 if (index >= sentences.length) {
-                    isSpeaking = false;
-                    statusEl.innerText = "NAIA PRONTA";
-                    statusEl.style.color = "#00ffff";
-                    return;
+                    isSpeaking = false; statusEl.innerText = "NAIA PRONTA"; statusEl.style.borderColor = "#00ff00"; return;
                 }
-
                 const chunk = sentences[index].trim();
                 if (!chunk) { index++; playNext(); return; }
 
                 const utter = new SpeechSynthesisUtterance(chunk);
                 utter.lang = 'it-IT';
-                utter.rate = 1.0;
                 
-                utter.onstart = () => {
-                    isSpeaking = true;
-                    statusEl.innerText = "NAIA RISPONDE...";
-                };
-                utter.onend = () => {
-                    index++;
-                    playNext();
-                };
+                utter.onstart = () => { isSpeaking = true; statusEl.innerText = "NAIA RISPONDE..."; };
+                utter.onend = () => { index++; playNext(); };
                 
                 synth.speak(utter);
             }
             playNext();
         }
 
-        // Tasto Invio
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendToBrain();
-        });
+        document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendToBrain(); });
 
-        // Avvio
         init3D();
-
     </script>
 </body>
 </html>
