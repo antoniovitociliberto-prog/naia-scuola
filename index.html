@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA 3D - GitHub Version</title>
+    <title>NAIA 3D - Fixed</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
     <script type="importmap">
@@ -24,25 +24,13 @@
         #avatar-view { width: 100%; height: 45vh; position: relative; background: radial-gradient(circle, #e0e0e0 0%, #ffffff 100%); border-bottom: 1px solid #ccc; z-index: 1; }
         #avatar-container { width: 100%; height: 100%; display: block; }
 
-        /* OVERLAY CARICAMENTO + DEBUG */
+        /* OVERLAY CARICAMENTO */
         #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; padding: 20px; text-align: center; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* BOX ERRORI (Visibile solo se qualcosa si rompe) */
-        #debug-console { 
-            display: none; 
-            margin-top: 20px; 
-            padding: 10px; 
-            background: #ffe6e6; 
-            border: 1px solid red; 
-            color: #d8000c; 
-            font-family: monospace; 
-            font-size: 12px; 
-            max-width: 90%; 
-            word-break: break-all;
-            border-radius: 8px;
-        }
+        /* BOX ERRORI */
+        #debug-console { display: none; margin-top: 20px; padding: 10px; background: #ffe6e6; border: 1px solid red; color: #d8000c; font-family: monospace; font-size: 12px; max-width: 90%; word-break: break-all; border-radius: 8px; }
 
         /* CHAT */
         #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
@@ -104,32 +92,27 @@
 
         let head; 
 
-        // FUNZIONE PER MOSTRARE ERRORI A VIDEO
+        // LOG ERRORI
         window.logError = function(msg) {
             console.error(msg);
             spinner.style.display = "none";
-            document.getElementById('load-text').innerText = "Si è verificato un errore:";
+            document.getElementById('load-text').innerText = "Errore:";
             debugConsole.style.display = "block";
             debugConsole.innerText = msg;
         }
 
-        // CATTURA ERRORI GLOBALI (es. Import falliti)
-        window.onerror = function(message, source, lineno, colno, error) {
-            window.logError(`Errore Script: ${message}`);
-        };
-
-        // 1. CARICAMENTO
+        // 1. CARICAMENTO AVATAR
         async function initAvatar() {
             const nodeAvatar = document.getElementById('avatar-container');
             
             try {
+                // Inizializza SENZA ttsEndpoint per evitare l'errore rosso
                 head = new TalkingHead(nodeAvatar, {
-                    ttsEndpoint: null, // Usa la voce del browser
+                    ttsEndpoint: null, 
                     cameraView: "upper",
                     softShadows: true
                 });
 
-                // Carica il modello
                 await head.showAvatar({
                     url: AVATAR_URL,
                     body: "F",
@@ -139,16 +122,14 @@
                     lipsyncLang: 'it' 
                 });
                 
-                // SE SIAMO QUI, HA FUNZIONATO
                 loadingOverlay.style.display = "none";
                 appendMessage("Ciao! Sono NAIA. Tocca lo schermo o scrivimi per iniziare.", 'ai');
 
-                // SBLOCCO AUDIO INVISIBILE
+                // SBLOCCO AUDIO
                 const unlock = () => {
                     if (head && head.audioCtx && head.audioCtx.state === 'suspended') {
                         head.audioCtx.resume();
                     }
-                    // Rimuovi i listener dopo il primo tocco
                     document.body.removeEventListener('click', unlock);
                     document.body.removeEventListener('touchstart', unlock);
                     document.body.removeEventListener('keydown', unlock);
@@ -162,9 +143,35 @@
             }
         }
 
-        // Avvia initAvatar quando il DOM è pronto
         window.addEventListener('DOMContentLoaded', initAvatar);
 
+        // 2. FUNZIONE VOCE SPECIALE (Risolve l'errore del TTS Endpoint)
+        async function speakWithFreeVoice(text) {
+            if(!head) return;
+            
+            // Usa un'API gratuita (StreamElements) per generare l'audio MP3
+            const voiceUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Giorgio&text=${encodeURIComponent(text)}`;
+            
+            try {
+                // Scarica l'audio
+                const res = await fetch(voiceUrl);
+                if (!res.ok) throw new Error("Errore voce");
+                const blob = await res.arrayBuffer();
+                
+                // Decodifica l'audio per l'Avatar
+                const audioData = await head.audioCtx.decodeAudioData(blob);
+                
+                // Fai parlare l'avatar (Audio + Movimento labbra)
+                head.speakAudio(audioData);
+
+            } catch (err) {
+                console.warn("Errore voce 3D, uso fallback:", err);
+                // Fallback: se fallisce la voce 3D, usa quella del browser (senza labbra)
+                const utt = new SpeechSynthesisUtterance(text);
+                utt.lang = "it-IT";
+                window.speechSynthesis.speak(utt);
+            }
+        }
 
         // --- UTILS ---
         function appendMessage(text, sender) {
@@ -192,16 +199,13 @@
             const question = inputField.value.trim();
             if (!question) return;
 
-            // Tentativo di sblocco audio extra sicurezza
             if (head && head.audioCtx && head.audioCtx.state === 'suspended') head.audioCtx.resume();
 
             appendMessage(question, 'user');
             inputField.value = "";
 
-            if(!head) return;
-            head.stopSpeaking();
+            if(head) head.stopSpeaking();
 
-            // --- TUA LOGICA ORIGINALE ---
             const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli, DEVI RISPONDERE ESATTAMENTE COSI LA PRIMA VOLTA CHE TI VIENE POSTA UNA DOMANDA.
@@ -328,6 +332,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 if (!response.ok) throw new Error("Errore Network");
                 const data = await response.json();
                 
+                // PULIZIA TESTO
                 let rawText = data.response;
                 let cleanText = rawText.replace(/\*/g, ""); 
                 cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, m => m.replace(/@/g, " chiocciola ").replace(/\./g, " punto "));
@@ -341,16 +346,15 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 
                 appendMessage(cleanText, 'ai');
                 
-                // PARLA!
-                head.speakText(cleanText);
+                // PARLA CON IL NUOVO METODO (BYPASS ERRORE)
+                speakWithFreeVoice(cleanText);
 
             } catch (error) {
                 console.error(error);
-                appendMessage("Errore di connessione.", 'ai');
+                appendMessage("Ho problemi di connessione, riprova.", 'ai');
             }
         };
 
-        // Gestione Invio da tastiera
         inputField.addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
 
     </script>
