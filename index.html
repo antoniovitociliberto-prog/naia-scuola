@@ -420,8 +420,8 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                      return match.replace(/\./g, " punto ");
                 });
                 // 3. Altri caratteri
-                cleanText = cleanText.replace(/[#_`~]/g, "");
-                cleanText = cleanText.replace(/\n/g, ". ");
+                cleanText = cleanText.replace(/[#_`~]/g, " ");
+                cleanText = cleanText.replace(/\n/g, ".");
                 
                 img.style.filter = "none";
                 
@@ -441,5 +441,6 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
