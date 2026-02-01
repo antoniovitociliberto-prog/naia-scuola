@@ -323,7 +323,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 // 4. Pulizia finale (toglie doppi punti tipo "..")
                 cleanText = cleanText.replace(/\s+/g, " "); // Toglie spazi doppi
                 cleanText = cleanText.replace(/\.\s*\./g, "."); // Toglie ".. "
-                cleanText = cleanText.replace(/Sono NAIA,?/gi, ""); // Toglie "Sono NAIA" ripetitivo
+            
                 
                 img.style.filter = "none";
                 speak(cleanText);;
@@ -340,6 +340,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
