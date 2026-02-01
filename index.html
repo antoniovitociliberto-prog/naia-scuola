@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA - 3D Full Prompt</title>
+    <title>NAIA 3D - Fixed</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
     <script type="importmap">
@@ -20,35 +20,32 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: #f4f7f6; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* ZONA AVATAR (Parte Alta) */
+        /* ZONA 3D */
         #avatar-view { width: 100%; height: 45vh; position: relative; background: radial-gradient(circle, #e0e0e0 0%, #ffffff 100%); border-bottom: 1px solid #ccc; z-index: 1; }
         #avatar-container { width: 100%; height: 100%; display: block; }
 
-        /* OVERLAY DI CARICAMENTO */
-        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; padding: 20px; text-align: center; }
+        /* LOADING */
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; padding: 20px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        #start-btn { display: none; margin-top: 20px; padding: 12px 25px; background: #2563eb; color: white; border: none; border-radius: 30px; font-size: 16px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+        #start-btn { display: none; padding: 12px 25px; background: #2563eb; color: white; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; margin-top: 15px; }
 
-        /* CHAT (Parte Centrale) */
+        /* CHAT */
         #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
-        .message { max-width: 85%; padding: 14px 20px; border-radius: 20px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); animation: popIn 0.3s ease; }
-        .ai-msg { align-self: flex-start; background: #f0f2f5; color: #333; border: 1px solid #e0e0e0; border-bottom-left-radius: 4px; }
+        .message { max-width: 85%; padding: 14px 20px; border-radius: 20px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .ai-msg { align-self: flex-start; background: #f0f2f5; color: #333; border-bottom-left-radius: 4px; }
         .user-msg { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 4px; }
 
-        /* INPUT E CONTROLLI (Parte Bassa) */
-        #input-zone { padding: 15px 20px; background: white; border-top: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        /* INPUT */
+        #input-zone { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
         #chat-input { flex: 1; background: #f3f4f6; border: none; padding: 15px 20px; border-radius: 30px; font-size: 16px; outline: none; }
-        .icon-btn { width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; background: white; border: 1px solid #ddd; color: #555; }
+        .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; background: white; border: 1px solid #ddd; }
         #btn-send { background: #2563eb; color: white; border: none; }
-        .mic-active { color: #ef4444 !important; border-color: #ef4444 !important; animation: pulseRed 1.5s infinite; }
+        .mic-active { color: red; border-color: red; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         
         #suggestions { padding: 10px 15px; display: flex; gap: 10px; overflow-x: auto; background: #fafafa; border-top: 1px solid #eee; }
-        .chip { background: white; border: 1px solid #2563eb; color: #2563eb; padding: 8px 15px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; }
-        
-        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .chip { background: white; border: 1px solid #2563eb; color: #2563eb; padding: 6px 12px; border-radius: 15px; font-size: 13px; white-space: nowrap; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -56,7 +53,7 @@
     <div id="avatar-view">
         <div id="loading-overlay">
             <div class="loader" id="spinner"></div>
-            <div id="load-text">Caricamento NAIA 3D...</div>
+            <div id="load-text">Caricamento 3D...<br><small>Attendere qualche secondo</small></div>
             <button id="start-btn" onclick="startExperience()">TOCCA PER INIZIARE</button>
         </div>
         <div id="avatar-container"></div>
@@ -72,93 +69,95 @@
 
     <div id="input-zone">
         <button id="btn-mic" class="icon-btn" onclick="startDictation()">🎙️</button>
-        <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
+        <input type="text" id="chat-input" placeholder="Chiedi a NAIA..." autocomplete="off">
         <button id="btn-send" class="icon-btn" onclick="sendToBrain()">➤</button>
     </div>
 
     <script type="module">
         import { TalkingHead } from "talkinghead";
 
-        // CONFIGURAZIONE
+        // --- CONFIGURAZIONE ---
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
-        const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024";
+        const AVATAR_URL = "https://models.readyplayer.me/64b7c8526563603403323565.glb?morphTargets=ARKit&textureAtlas=1024";
 
         const chatContainer = document.getElementById('chat-container');
         const inputField = document.getElementById('chat-input');
-        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadOverlay = document.getElementById('loading-overlay');
+        const startBtn = document.getElementById('start-btn');
         const spinner = document.getElementById('spinner');
         const loadText = document.getElementById('load-text');
-        const startBtn = document.getElementById('start-btn');
 
-        let head; 
+        let head; // Istanza dell'avatar
 
-        // --- 1. FUNZIONE TTS PERSONALIZZATA (SOLUZIONE ERRORE ROSSO) ---
-        // Questa funzione sostituisce il TTS di Google che dava errore.
-        // Scarica l'audio "Carla" (italiano) da StreamElements e lo passa all'avatar.
-        async function customTTS(text) {
+        // --- 1. FUNZIONE TTS SPECIALE (SOLUZIONE ERRORE ROSSO) ---
+        // Questa funzione forza l'uso di un servizio esterno, impedendo alla libreria di cercare Google.
+        async function customExternalTTS(text) {
+            console.log("TTS Richiesto:", text);
             try {
+                // Usiamo StreamElements con voce Carla (Italiano)
                 const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error("Errore TTS StreamElements");
-                const blob = await response.blob();
-                return await blob.arrayBuffer(); 
-            } catch (error) {
-                console.error("TTS Error:", error);
-                throw error;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("TTS Network Error");
+                const blob = await res.blob();
+                return await blob.arrayBuffer();
+            } catch (err) {
+                console.error("TTS Fallito:", err);
+                throw err;
             }
         }
 
-        // --- 2. INIZIALIZZAZIONE AVATAR ---
+        // --- 2. INIZIALIZZAZIONE 3D ---
         async function initAvatar() {
-            const nodeAvatar = document.getElementById('avatar-container');
             try {
-                // Inizializza TalkingHead usando la nostra funzione customTTS
-                head = new TalkingHead(nodeAvatar, {
-                    tts: customTTS, 
+                const node = document.getElementById('avatar-container');
+                
+                // Configurazione ESPLICITA per evitare l'errore Google
+                head = new TalkingHead(node, {
+                    tts: customExternalTTS, // <--- QUI STA IL TRUCCO. Passiamo la funzione, non null.
                     cameraView: "upper",
                     softShadows: true
                 });
 
-                // Carica il modello 3D
+                // Carichiamo il modello
                 await head.showAvatar({
                     url: AVATAR_URL,
                     body: "F",
                     avatarMood: "neutral",
-                    lipsyncLang: 'it' 
+                    lipsyncLang: 'it'
                 });
-                
-                // Tutto pronto
-                spinner.style.display = "none";
+
+                // Se arriviamo qui, il 3D è pronto
+                spinner.style.display = 'none';
                 loadText.innerText = "NAIA è pronta.";
-                startBtn.style.display = "block";
+                startBtn.style.display = 'block';
 
             } catch (error) {
-                console.error("Init Error:", error);
-                spinner.style.display = "none";
-                loadText.innerText = "Errore caricamento 3D.";
-                // Fallback: mostra un errore in chat ma permette di scrivere
-                appendMessage("Errore caricamento grafico. La chat testuale funziona.", 'ai');
-                loadingOverlay.style.display = "none"; 
+                console.error("Errore Init 3D:", error);
+                spinner.style.display = 'none';
+                loadText.innerHTML = "Errore grafico.<br>La chat testuale funziona.";
+                startBtn.innerText = "USA SOLO CHAT";
+                startBtn.style.display = 'block';
+                // Non blocchiamo tutto, permettiamo di usare la chat anche se il 3D fallisce
             }
         }
 
-        // --- 3. AVVIO ESPERIENZA ---
         window.startExperience = async function() {
-            loadingOverlay.style.display = "none";
-            // Sblocca audio context (necessario per i browser moderni)
-            if (head && head.audioCtx) {
-                await head.audioCtx.resume();
+            loadOverlay.style.display = 'none';
+            if(head) {
+                try {
+                    await head.audioCtx.resume(); // Sblocca audio browser
+                    const welcome = "Ciao! Sono NAIA. Chiedimi pure informazioni sulla scuola.";
+                    appendMessage(welcome, 'ai');
+                    head.speakText(welcome);
+                } catch(e) { console.log("Audio start error", e); }
             }
-            const welcome = "Ciao! Sono NAIA. Sono qui per aiutarti con informazioni sull'istituto Boccardi Tiberio.";
-            appendMessage(welcome, 'ai');
-            if(head) head.speakText(welcome);
         };
 
+        // Avvio al caricamento pagina
         window.addEventListener('DOMContentLoaded', initAvatar);
 
-
-        // --- UTILS ---
+        // --- FUNZIONI CHAT ---
         function appendMessage(text, sender) {
             const div = document.createElement('div');
             div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
@@ -167,138 +166,81 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        window.quickAsk = function(text) { inputField.value = text; sendToBrain(); }
+        window.quickAsk = function(t) { inputField.value = t; sendToBrain(); }
 
         window.startDictation = function() {
             const btn = document.getElementById('btn-mic');
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'it-IT';
             recognition.start();
-            recognition.onstart = () => { btn.classList.add("mic-active"); inputField.placeholder = "Ti ascolto..."; };
-            recognition.onend = () => { btn.classList.remove("mic-active"); inputField.placeholder = "Scrivi qui..."; if(inputField.value) sendToBrain(); };
+            recognition.onstart = () => { btn.classList.add("mic-active"); };
+            recognition.onend = () => { btn.classList.remove("mic-active"); if(inputField.value) sendToBrain(); };
             recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; };
         };
 
-        // --- 4. IL CERVELLO (PROMPT COMPLETO) ---
+        // --- 3. IL CERVELLO (PROMPT RIPRISTINATO DAL TUO FILE) ---
         window.sendToBrain = async function() {
             const question = inputField.value.trim();
             if (!question) return;
 
-            // Assicurati che l'audio sia attivo
-            if (head && head.audioCtx && head.audioCtx.state === 'suspended') head.audioCtx.resume();
+            // Stop audio precedente se l'utente parla sopra
+            if(head) head.stopSpeaking();
 
             appendMessage(question, 'user');
             inputField.value = "";
-            if(head) head.stopSpeaking(); // Ferma se sta parlando
-
-            // ============================================================
-            // PROMPT COMPLETO (Recuperato dal tuo file originale)
-            // ============================================================
+            
+            // --- INSERISCO IL TUO SYSTEM PROMPT COMPLETO QUI ---
             const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
-1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli, DEVI RISPONDERE ESATTAMENTE COSI LA PRIMA VOLTA CHE TI VIENE POSTA UNA DOMANDA.
+1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
-3. VIETATO USARE FORMATTAZIONE VISIVA: NIENTE ASTERISCHI (*), niente elenchi puntati, niente grassetti, niente titoli (#).
-4. Sii BREVE e concisa (massimo 2 frasi).
-5. Usa un tono professionale ma amichevole, un po' futuristico.
-6. Se non sai una cosa, di' semplicemente che stai ancora imparando.
-7. Non inventare fatti strani.
-8. SOLO Se ti chiedono "Chi sei", DEVI rispondere che ti chiami NAIA e che sei l'AI della scuola Giovanni Boccardi / Ugo Tiberio di Termoli.
-9. DOPO ESSERTI PRESENTATA LA PRIMA VOLTA NON INIZIARE MAI una risposta dicendo "Sono NAIA", rispondi semplicemente alla domanda, vai dritta al punto.
-10. NON usare elenchi puntati complessi, USA FRASI DISCORSIVE.
-11. USA SOLO I DATI SCRITTI IN QUESTA SEZIONE.
-I tuo compito è accogliere gli ospiti e rispondere alle domande sulla scuola.
+3. VIETATO USARE FORMATTAZIONE VISIVA COMPLESSA (niente #, niente **).
+4. Sii BREVE e concisa (massimo 2-3 frasi).
+5. Usa un tono professionale ma amichevole.
+6. USA SOLO I DATI SCRITTI QUI SOTTO.
+
 SCHEDA INFORMATIVA SCUOLA:
-1. DATI IDENTIFICATIVI E AMMINISTRATIVI
-denominazione Ufficiale, Istituto di Istruzione Superiore Giovanni Boccardi / Ugo Tiberio,
-via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86039 Termoli (C,B), Molise,
-pec (Posta Certificata): CBIS01800L@pec.istruzione.it,
-email: Istituzionale CBIS01800L@istruzione.it,
-sito Web: www.iisboccarditiberio.edu.it,
-telefono: 0 8 7 5 8 3 6 5 5.
-2. STORIA E IDENTITÀ
-l'istituto nasce dalla fusione di due storiche scuole di Termoli
-l'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959)
-l'Istituto Tecnico Tecnologico "Ugo Tiberio" (ex Nautico e Geometri, con il Nautico presente a Termoli fin dal pre-guerra come Scuola Marinara)
-certificazioni: L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), fondamentale per il riconoscimento dei titoli marittimi internazionali
-3. OFFERTA FORMATIVA DETTAGLIATA
-l'istituto offre percorsi diurni (5 anni) e percorsi serali (istruzione per adulti)
-per il settore tecnologico Ugo Tiberio abbiamo a disposizione i seguenti corsi di studio:
-indirizzo c a i m, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina.
-indirizzo c m n, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani).
-indirizzo logistica, Gestione dei trasporti intermodali terra, mare e aria.
-indirizzo c a t, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica.
-per il settore economico Giovanni Boccardi abbiamo a disposizione i seguenti corsi di studio:
-indirizzo a f m, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative.
-indirizzi s i a, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia.
-indirizzo r i m, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali.
-indirizzo turismo, Percorso specifico per l'impresa turistica. Materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere.
-corsi SERALI Istruzione per Adulti.
-percorsi abbreviati per lavoratori o chi vuole riprendere gli studi, attivi sia per l'indirizzo Economico che per il Tecnologico, in base al numero di iscritti.
-4. QUADRO ORARIO DISCIPLINE
-1 Opzione caim ufficiali di macchina:
-italiano 4 ore settimanali per l'intera durata del percorso di studi
-storia 2 ore settimanali per l'intera durata del percorso di studi
-inglese 3 ore settimanali per l'intera durata del percorso di studi
-matematica 4 ore nel biennio per poi passare a 3 ore negli ultimi 3 anni
-diritto ed Economia 2 ore per l'intera durata del percorso di studi
-logistica 3 ore di cui 1 in laboratorio per il terzo e quarto anno
-elettrotecnica e Automazione 3 ore di cui 2 di laboratorio per gli ultimi 3 anni
-scienze della navigazione 3 ore (2 di laboratorio) terzo e quarto anno, 4 ore (3 di laboratorio) il quinto anno
-meccanica e Macchine 5 ore per il terzo e il quarto di cui 3 di laboratorio, 8 ore al quinto di cui 5 di laboratorio
-scienze motorie 2 ore per tutti gli anni di corso 
-religione 1 ora per tutti gli anni di corso 
-informatica, Tecniche di rappresentazione grafica, geografia e scienze applicate si fanno nel primo e nel secondo anno 
-2 Opzione cmn ufficiali di coperta:
-italiano 4 ore settimanali per l'intera durata del percorso di studi 
-storia 2 ore settimanali per l'intera durata del percorso di studi
-inglese 3 ore settimanali per l'intera durata del percorso di studi 
-matematica 4 ore nel biennio per poi passare a 3 ore negli ultimi 3 anni 
-diritto ed Economia 2 ore per l'intera durata del percorso di studi 
-logistica 3 ore di cui 1 in laboratorio per il terzo e quarto anno 
-elettrotecnica e Automazione 3 ore di cui 2 di laboratorio per gli ultimi 3 anni 
-meccanica e Macchine 3 ore (2 di laboratorio) terzo e quarto anno, 4 ore (3 di laboratorio) il quinto anno 
-scienze della navigazione 5 ore per il terzo e il quarto di cui 3 di laboratorio, 8 ore al quinto di cui 5 di laboratorio 
-scienze motorie 2 ore per tutti gli anni di corso 
-religione 1 ora per tutti gli anni di corso 
-informatica, chimica, fisica, biologia e scienze applicate si fanno nel primo e nel secondo anno 
-5. STRUTTURE, LABORATORI E DOTAZIONI TECNICHE
-se l'utente chiede "perché scegliere questa scuola" o "che laboratori avete", cita questi asset specifici:
-planetario, Ristrutturato e riattivato (progetto "Oltre l'Infinito"), utilizzato per lezioni di astronomia e navigazione 
-simulatore Navale, Software e hardware professionale per la simulazione di manovre navali (fondamentale per il Nautico)
-sala Voga, Ambiente attrezzato per la preparazione fisica al canottaggio 
-laboratori Informatici, 5 aule informatizzate (Lab. Economy 2.0, Informatica SIA, Informatica Base) 
-altri Laboratori, Chimica, Fisica, Scienze della Navigazione, Logistica 
-digital Fabrication, Stampanti 3D e Droni professionali per rilievi topografici e sottomarini 
-strutture Sportive, Palestra interna, sala attrezzi ginnici, tavoli da ping-pong, campetti esterni 
-sale Conferenze, Due aule magne per eventi e assemblee 
-6. PROGETTI E OPPORTUNITÀ (EXTRA-CURRICULARI)
-erasmus+ (Accreditamento 2022-2027) La scuola è accreditata come polo di eccellenza per la mobilità europea, offre viaggi studio gratuiti e stage all'estero per studenti e docenti
-F S L (ex Alternanza Scuola-Lavoro) Collaborazioni con aziende del territorio, studi professionali, compagnie di navigazione, enti turistici e banche per tirocini formativi
-certificazioni Linguistiche Preparazione per Cambridge (Inglese), DELF (Francese), DELE (Spagnolo)
-centro Sportivo Scolastico Attività pomeridiane (es. canottaggio, sport di squadra)
-7. ORGANIGRAMMA E ORARI DI RICEVIMENTO
-dirigente Scolastico la professoressa Concetta Cimmino
-ricevimento Mar, Mer, Ven (11:00-13:00) su appuntamento
-segreteria (Orario Pubblico) Lun-Sab, ore 11:00 - 13:00
-collaboratori del Dirigente 
-il referente per il settore economico lato Boccardi è il professore Tommaso Guerrera
-la referente per il settore tecnologico lato tiberio e la professoressa Barbara Mammarella
-8. DOMANDE FREQUENTI (FAQ) - ISTRUZIONI DI RISPOSTA
-Q: Come vedo i voti di mio figlio?
-A: Utilizza il Registro Elettronico Spaggiari. Le credenziali vengono fornite dalla segreteria al primo anno. C'è un link diretto sul sito web della scuola
-Q: La scuola è aperta il pomeriggio?
-A: Gli uffici di segreteria no (chiudono alle 14:00, salvo aperture straordinarie). La scuola rimane aperta per i corsi serali e per i progetti pomeridiani programmati
-Q: Cosa devo fare per l'iscrizione al primo anno?
-A: L'iscrizione si fa online tramite il portale Ministeriale "Unica" (gennaio/febbraio). Ti servirà il codice meccanografico specifico dell'indirizzo scelto (vedi sezione 1 dei miei dati)
-Q: Qual è il codice meccanografico dell'istituto U Tiberio?
-A: CBIS01800L
-Q: C'è il convitto?
-A: Non risulta presente un convitto interno gestito direttamente dalla scuola. Gli studenti fuori sede solitamente si appoggiano a strutture private o convitti convenzionati nella zona di Termoli (verificare disponibilità aggiornata in segreteria)
-Q: Accettate pagamenti in contanti?
-A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA
-                
-                Domanda dell'utente: ${question}
+1. DATI IDENTIFICATIVI
+Istituto Giovanni Boccardi / Ugo Tiberio, Via Alcide De Gasperi 30, Termoli (CB).
+Email: CBIS01800L@istruzione.it, Sito: www.iisboccarditiberio.edu.it, Tel: 087583655.
+2. STORIA
+Fusione di Tecnico Economico "Boccardi" e Tecnico Tecnologico "Tiberio" (Nautico/Geometri).
+Il Nautico ha certificazione ISO 9001.
+3. INDIRIZZI DI STUDIO
+Tecnologico (Tiberio):
+- CAIM (Macchinisti navali): Meccanica, macchine (5 ore/8 ore in 5°), laboratorio.
+- CMN (Capitani): Scienze navigazione (5 ore/8 ore in 5°), laboratorio.
+- Logistica: Trasporti intermodali.
+- CAT (Costruzioni Ambiente Territorio - ex Geometri).
+Economico (Boccardi):
+- AFM (Amministrazione Finanza Marketing).
+- SIA (Sistemi Informativi Aziendali): Informatica gestionale, database.
+- RIM (Relazioni Internazionali Marketing): 3 lingue straniere.
+- Turismo: Arte, territorio, 3 lingue.
+Corsi Serali per adulti disponibili.
+4. QUADRO ORARIO (Sintesi)
+Italiano (4 ore), Storia (2 ore), Inglese (3 ore) per tutti.
+Matematica (4 ore biennio, 3 triennio).
+Materie specifiche variano per indirizzo (Navigazione, Meccanica, Informatica, ecc.).
+5. LABORATORI E STRUTTURE
+Planetario (Progetto "Oltre l'Infinito"), Simulatore Navale professionale, Sala Voga.
+Laboratori Informatici (Economy 2.0, SIA), Chimica, Fisica, Scienze Navigazione.
+Stampanti 3D, Droni, Palestra interna, Campetti esterni, Due Aule Magne.
+6. PROGETTI
+Erasmus+ (viaggi studio), PCTO (ex Alternanza), Certificazioni Cambridge/DELF/DELE.
+Centro Sportivo Scolastico.
+7. ORGANIGRAMMA
+Dirigente: Prof.ssa Concetta Cimmino (Riceve Mar-Mer-Ven 11-13).
+Referente Economico: Prof. Tommaso Guerrera.
+Referente Tecnologico: Prof.ssa Barbara Mammarella.
+Segreteria: Lun-Sab 11-13.
+8. INFO PRATICHE
+Iscrizioni: Online portale "Unica" (Gennaio/Febbraio). Codice Tiberio: CBIS01800L.
+Voti: Registro Elettronico Spaggiari.
+Pagamenti: Solo PagoPA.
+Convitto: Non presente interno (solo convenzioni esterne).
+
+Domanda dell'utente: ${question}
             `;
 
             try {
@@ -311,39 +253,33 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                         system: SYSTEM_INSTRUCTION,
                         stream: false,
                         keep_alive: -1,
-                        options: { temperature: 0, num_predict: 450, num_ctx: 4096 }
+                        options: { temperature: 0, num_predict: 500 }
                     })
                 });
                 
-                if (!response.ok) throw new Error("Errore Network");
+                if (!response.ok) throw new Error("Ollama Network Error");
                 const data = await response.json();
                 
-                // PULIZIA TESTO
+                // Pulizia testo per evitare che legga caratteri strani
                 let cleanText = data.response
                     .replace(/\*/g, "")
-                    .replace(/[#_`~]/g, "")
-                    .replace(/\n/g, " ")
-                    .replace(/\s+/g, " ")
+                    .replace(/[#_]/g, "")
+                    .replace(/\n/g, ". "); 
                 
-
-                // Gestione siti web per la voce (legge "punto" invece di ignorarlo)
-                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
-                     return match.replace(/\./g, " punto ");
-                });
+                // Gestione lettura indirizzi web
+                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => m.replace(/\./g, " punto "));
 
                 appendMessage(cleanText, 'ai');
                 
-                // PARLA (Usa customTTS automaticamente)
-                if(head) {
-                    head.speakText(cleanText);
-                }
+                // PARLA (Se l'avatar è attivo)
+                if(head) head.speakText(cleanText);
 
             } catch (error) {
                 console.error(error);
-                appendMessage("Problema di connessione con il cervello.", 'ai');
+                appendMessage("Non riesco a connettermi al cervello. Controlla Ngrok.", 'ai');
             }
         };
-
+        
         inputField.addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
 
     </script>
