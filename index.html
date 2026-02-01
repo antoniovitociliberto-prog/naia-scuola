@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA - Full Prompt V5</title>
+    <title>NAIA - Prompt Completo 3D</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
     <script type="importmap">
@@ -29,7 +29,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        #version-tag { position: absolute; bottom: 10px; right: 10px; font-size: 10px; color: #999; z-index: 101; }
+        #start-btn { display: none; margin-top: 20px; padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
         /* CHAT */
         #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
@@ -56,7 +56,7 @@
         <div id="loading-overlay">
             <div class="loader" id="spinner"></div>
             <div id="load-text">Sto caricando NAIA...</div>
-            <div id="version-tag">V5.0 (Full Prompt + Carla)</div>
+            <button id="start-btn" onclick="startExperience()">TOCCA PER INIZIARE</button>
         </div>
         <div id="avatar-container"></div>
     </div>
@@ -78,7 +78,7 @@
     <script type="module">
         import { TalkingHead } from "talkinghead";
 
-        // CONFIGURAZIONE
+        // CONFIGURAZIONE BASE
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
         const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024";
@@ -86,17 +86,37 @@
         const chatContainer = document.getElementById('chat-container');
         const inputField = document.getElementById('chat-input');
         const loadingOverlay = document.getElementById('loading-overlay');
-        
+        const spinner = document.getElementById('spinner');
+        const loadText = document.getElementById('load-text');
+        const startBtn = document.getElementById('start-btn');
+
         let head; 
 
-        // 1. CARICAMENTO AVATAR (NO API KEY)
+        // --- 1. FUNZIONE TTS PERSONALIZZATA (SOLUZIONE DEFINITIVA ERRORI) ---
+        // Scarica la voce da un server gratuito e la passa all'avatar come audio grezzo.
+        // Questo aggira completamente i blocchi di Google.
+        async function customTTS(text) {
+            try {
+                // Usiamo "Carla" (Voce Italiana)
+                const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Errore TTS");
+                const blob = await response.blob();
+                return await blob.arrayBuffer(); // Ritorna l'audio per il LipSync
+            } catch (error) {
+                console.error("TTS Error:", error);
+                throw error;
+            }
+        }
+
+        // --- 2. CARICAMENTO AVATAR ---
         async function initAvatar() {
             const nodeAvatar = document.getElementById('avatar-container');
             
             try {
-                // Impostiamo ttsEndpoint a null, gestiamo l'audio manualmente
+                // Configuriamo TalkingHead per usare la NOSTRA funzione TTS, non quella di Google
                 head = new TalkingHead(nodeAvatar, {
-                    ttsEndpoint: null, 
+                    tts: customTTS, 
                     cameraView: "upper",
                     softShadows: true
                 });
@@ -108,66 +128,33 @@
                     lipsyncLang: 'it' 
                 });
                 
-                loadingOverlay.style.display = "none";
-                appendMessage("Ciao! Sono NAIA. Tocca lo schermo per attivare la mia voce.", 'ai');
-
-                // SBLOCCO AUDIO UNIVERSALE
-                const unlock = () => {
-                    if (head && head.audioCtx) {
-                        head.audioCtx.resume().then(() => console.log("Audio ON"));
-                    }
-                    document.body.removeEventListener('click', unlock);
-                    document.body.removeEventListener('touchstart', unlock);
-                    document.body.removeEventListener('keydown', unlock);
-                };
-                document.body.addEventListener('click', unlock);
-                document.body.addEventListener('touchstart', unlock);
-                document.body.addEventListener('keydown', unlock);
+                // Avatar caricato: Nascondi spinner, mostra tasto avvio
+                spinner.style.display = "none";
+                loadText.innerText = "NAIA è pronta.";
+                startBtn.style.display = "block";
 
             } catch (error) {
                 console.error("Init Error:", error);
-                loadingOverlay.style.display = "none";
-                appendMessage("Errore caricamento. Ricarica la pagina.", 'ai');
+                spinner.style.display = "none";
+                loadText.innerText = "Errore caricamento 3D.";
             }
         }
+
+        // --- 3. AVVIO ESPERIENZA ---
+        window.startExperience = async function() {
+            loadingOverlay.style.display = "none";
+            // Sblocca il motore audio del browser (necessario su Chrome/Safari)
+            if (head && head.audioCtx) {
+                await head.audioCtx.resume();
+            }
+            const welcomeMsg = "Ciao! Sono NAIA, l'assistente dell'Istituto Boccardi Tiberio. Come posso aiutarti oggi?";
+            appendMessage(welcomeMsg, 'ai');
+            // La prima frase di test
+            head.speakText(welcomeMsg);
+        };
 
         window.addEventListener('DOMContentLoaded', initAvatar);
 
-        // 2. FUNZIONE VOCE FEMMINILE (CARLA) + LIPSYNC
-        async function speakWithFemaleVoice(text) {
-            if(!head) return;
-            
-            // Resume Audio Context
-            if (head.audioCtx.state === 'suspended') {
-                await head.audioCtx.resume();
-            }
-
-            // URL Voce "Carla" (Femminile Italiana)
-            const voiceUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
-            
-            try {
-                const res = await fetch(voiceUrl);
-                if (!res.ok) throw new Error("Errore recupero audio");
-                
-                const blob = await res.arrayBuffer();
-                const audioData = await head.audioCtx.decodeAudioData(blob);
-                
-                // LipSync + Audio
-                head.speakAudio(audioData);
-
-            } catch (err) {
-                console.warn("Fallback su voce browser", err);
-                const utt = new SpeechSynthesisUtterance(text);
-                utt.lang = "it-IT";
-                const voices = window.speechSynthesis.getVoices();
-                // Cerca voce femminile locale
-                const femaleVoice = voices.find(v => v.lang.includes('it') && (v.name.includes('Elsa') || v.name.includes('Alice') || v.name.includes('Google')));
-                if(femaleVoice) utt.voice = femaleVoice;
-                
-                window.speechSynthesis.speak(utt);
-                head.speakText("", { text: text }); // Muove labbra simulato
-            }
-        }
 
         // --- UTILS ---
         function appendMessage(text, sender) {
@@ -190,11 +177,12 @@
             recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; };
         };
 
-        // --- CERVELLO (Ollama) CON PROMPT COMPLETO ---
+        // --- 4. IL CERVELLO (PROMPT ORIGINALE COMPLETO) ---
         window.sendToBrain = async function() {
             const question = inputField.value.trim();
             if (!question) return;
 
+            // Assicurati che l'audio sia attivo
             if (head && head.audioCtx && head.audioCtx.state === 'suspended') head.audioCtx.resume();
 
             appendMessage(question, 'user');
@@ -202,7 +190,9 @@
 
             if(head) head.stopSpeaking();
 
-            // QUI C'È TUTTO IL TUO PROMPT ORIGINALE
+            // ============================================================
+            // IL TUO PROMPT COMPLETO ORIGINALE
+            // ============================================================
             const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli, DEVI RISPONDERE ESATTAMENTE COSI LA PRIMA VOLTA CHE TI VIENE POSTA UNA DOMANDA.
@@ -306,9 +296,10 @@ Q: C'è il convitto?
 A: Non risulta presente un convitto interno gestito direttamente dalla scuola. Gli studenti fuori sede solitamente si appoggiano a strutture private o convitti convenzionati nella zona di Termoli (verificare disponibilità aggiornata in segreteria)
 Q: Accettate pagamenti in contanti?
 A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA
-            
+                
                 Domanda dell'utente: ${question}
             `;
+            // ============================================================
 
             try {
                 const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
@@ -328,25 +319,21 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 const data = await response.json();
                 
                 // PULIZIA TESTO
-                let rawText = data.response;
-                let cleanText = rawText.replace(/\*/g, ""); 
-                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, m => m.replace(/@/g, " chiocciola ").replace(/\./g, " punto "));
-                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, m => m.replace(/\./g, " punto "));
-                cleanText = cleanText.replace(/[#_`~]/g, "");
-                cleanText = cleanText.replace(/\n\n/g, ". ");
-                cleanText = cleanText.replace(/\n/g, " ");
-                cleanText = cleanText.replace(/\s+/g, " "); 
-                cleanText = cleanText.replace(/\.\s*\./g, "."); 
-                
-
+                let cleanText = data.response
+                    .replace(/\*/g, "")
+                    .replace(/[#_`~]/g, "")
+                    .replace(/\n/g, " ")
+                    .replace(/\s+/g, " ")
                 appendMessage(cleanText, 'ai');
                 
-                // PARLA (Voce Carla + LipSync)
-                speakWithFemaleVoice(cleanText);
+                // PARLA (La funzione speakText userà automaticamente customTTS definito sopra)
+                if(head) {
+                    head.speakText(cleanText);
+                }
 
             } catch (error) {
                 console.error(error);
-                appendMessage("Ho problemi di connessione, riprova.", 'ai');
+                appendMessage("Problema di connessione.", 'ai');
             }
         };
 
