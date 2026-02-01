@@ -410,30 +410,38 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 
                 let rawText = data.response;
             
-                // 1. Pulisce asterischi
-                let cleanText = rawText.replace(/\*/g, ""); 
-                // 2. Email e Siti
+                // --- PULIZIA TESTO INTELLIGENTE ---
+                let cleanText = rawText;
+
+                // 1. Rimuove Markdown (grassetto, corsivo)
+                cleanText = cleanText.replace(/\*/g, "").replace(/#/g, "");
+
+                // 2. SOSTITUZIONE "PUNTO" SOLO NELLE MAIL E SITI
+                // Trova email e sostituisce i punti SOLO dentro la mail
                 cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
                     return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
                 });
+
+                // Trova siti web (www.) e sostituisce i punti SOLO dentro l'URL
                 cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
                      return match.replace(/\./g, " punto ");
                 });
-                // 3. Altri caratteri
-                cleanText = cleanText.replace(/[#_`~]/g, " ");
-                cleanText = cleanText.replace(/\n/g, ".");
+
+                // 3. Sistema la punteggiatura standard (NON trasforma i punti in parole, ma in pause)
+                cleanText = cleanText.replace(/\n/g, ". ");
+                cleanText = cleanText.replace(/Sono NAIA,?/gi, ""); // Toglie ripetizioni
                 
-                img.style.filter = "none";
+                // Ripristina stato visivo
+                img.style.filter = "drop-shadow(0 0 10px rgba(0, 255, 255, 0.3))";
                 
-                // Aggiungo risposta AI alla chat visiva (COSI VEDI IL TESTO)
                 appendMessage(cleanText, 'ai');
-                
                 speak(cleanText);
 
             } catch (error) {
                 console.error(error);
                 img.style.filter = "none";
                 statusDiv.innerText = "ERRORE DI RETE";
+                appendMessage("Errore di connessione al cervello.", 'ai');
                 alert("Errore di connessione. Controlla Ngrok!");
             }
         }
@@ -441,6 +449,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
