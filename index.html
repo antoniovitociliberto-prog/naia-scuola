@@ -5,15 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NAIA - School AI</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        body { 
+            margin: 0; overflow: hidden; background-color: #000; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; flex-direction: column; height: 100vh;
+        }
         
+        /* --- AVATAR (Sfondo alto) --- */
         #avatar-container { 
-            width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: radial-gradient(circle, #222 0%, #000 100%); 
+            flex: 1; /* Prende lo spazio libero sopra */
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle, #222 0%, #000 100%);
+            position: relative;
+            z-index: 1;
         }
 
         #naia-img {
-            height: 60vh; width: auto; max-width: 90%; object-fit: contain;
+            height: 40vh; /* Un po' più piccola per lasciare spazio alla chat */
+            width: auto; max-width: 90%; object-fit: contain;
             border-radius: 20px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
             transition: all 0.3s ease;
         }
@@ -24,42 +33,97 @@
         .speaking { animation: talkPulse 0.2s infinite; border: 2px solid #00ffff; }
         @keyframes talkPulse { 0% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } 50% { box-shadow: 0 0 50px #00ffff; transform: scale(1.01); } 100% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } }
 
+        /* --- CHAT AREA (Design Domanda/Risposta) --- */
+        #chat-window {
+            flex: 1; /* Prende la metà inferiore */
+            background: rgba(20, 20, 20, 0.9);
+            border-top: 2px solid #00ffff;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 15px;
+            font-size: 16px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* STILE UTENTE (Blu) */
+        .user-msg {
+            align-self: flex-end;
+            background-color: #007bff; /* Blu acceso */
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* STILE AI (Bianco) */
+        .ai-msg {
+            align-self: flex-start;
+            background-color: #ffffff;
+            color: #000;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #ccc;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- CONTROLLI --- */
         #ui-layer {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 95%; max-width: 600px; display: flex; flex-direction: column; gap: 10px; z-index: 100;
+            background: #111;
+            padding: 15px;
+            display: flex; flex-direction: column; gap: 10px;
+            border-top: 1px solid #333;
         }
 
         #status { 
-            text-align: center; color: #00ffff; font-weight: bold; background: rgba(0,0,0,0.8); 
-            padding: 8px 20px; border-radius: 15px; align-self: center; font-size: 14px;
+            text-align: center; color: #00ffff; font-weight: bold; 
+            font-size: 12px; margin-bottom: 5px;
         }
 
-        .controls { display: flex; gap: 8px; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid #444; }
+        .controls { display: flex; gap: 10px; }
         
-        input { flex: 1; padding: 12px; border-radius: 15px; border: none; background: #222; color: white; font-size: 16px; outline: none; }
+        input { 
+            flex: 1; padding: 15px; border-radius: 25px; border: 1px solid #444; 
+            background: #222; color: white; font-size: 16px; outline: none; 
+        }
         
-        button { border: none; cursor: pointer; border-radius: 15px; font-size: 20px; width: 50px; height: 50px; }
+        button { border: none; cursor: pointer; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; transition: transform 0.2s; }
+        button:active { transform: scale(0.9); }
         #btn-send { background: #00ffff; color: #000; }
         #btn-mic { background: #ff0055; color: #fff; }
-        .mic-active { background: red !important; }
+        .mic-active { background: red !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
     </style>
 </head>
 <body>
 
     <div id="avatar-container">
-        <img src="naia.jpg" id="naia-img" class="idle">
+        <img src="naia.jpg" id="naia-img" class="idle" onerror="this.src='https://via.placeholder.com/400x600/000000/00FFFF?text=NAIA'">
+    </div>
+
+    <div id="chat-window">
+        <div class="message ai-msg">
+            Ciao! Sono NAIA, l'assistente dell'Istituto Boccardi-Tiberio. Chiedimi pure informazioni sulla scuola!
+        </div>
     </div>
 
     <div id="ui-layer">
         <div id="status">NAIA PRONTA</div>
         <div class="controls">
             <button id="btn-mic" onclick="startDictation()">🎤</button>
-            <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
+            <input type="text" id="chat-input" placeholder="Scrivi qui la tua domanda..." autocomplete="off">
             <button id="btn-send" onclick="sendToBrain()">➤</button>
         </div>
     </div>
-
+    
     <script>
         
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
@@ -340,6 +404,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
