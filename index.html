@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA 3D - Fixed</title>
+    <title>NAIA 3D - Ultimate Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
     <script type="importmap">
@@ -20,32 +20,32 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: #f4f7f6; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* ZONA 3D */
-        #avatar-view { width: 100%; height: 45vh; position: relative; background: radial-gradient(circle, #e0e0e0 0%, #ffffff 100%); border-bottom: 1px solid #ccc; z-index: 1; }
+        /* ZONA 3D (Alto) */
+        #avatar-view { width: 100%; height: 45vh; position: relative; background: radial-gradient(circle, #f0f0f0 0%, #ffffff 100%); border-bottom: 1px solid #ccc; z-index: 1; }
         #avatar-container { width: 100%; height: 100%; display: block; }
 
-        /* LOADING */
-        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; padding: 20px; }
+        /* LOADING SCREEN */
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #start-btn { display: none; padding: 12px 25px; background: #2563eb; color: white; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; margin-top: 15px; }
+        #start-btn { display: none; padding: 12px 25px; background: #2563eb; color: white; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; margin-top: 15px; font-size: 16px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
-        /* CHAT */
+        /* CHAT (Centro) */
         #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
         .message { max-width: 85%; padding: 14px 20px; border-radius: 20px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .ai-msg { align-self: flex-start; background: #f0f2f5; color: #333; border-bottom-left-radius: 4px; }
+        .ai-msg { align-self: flex-start; background: #f0f2f5; color: #333; border-bottom-left-radius: 4px; border: 1px solid #e0e0e0; }
         .user-msg { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 4px; }
 
-        /* INPUT */
+        /* INPUT (Basso) */
         #input-zone { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
         #chat-input { flex: 1; background: #f3f4f6; border: none; padding: 15px 20px; border-radius: 30px; font-size: 16px; outline: none; }
-        .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; background: white; border: 1px solid #ddd; }
+        .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; background: white; border: 1px solid #ddd; color: #555; transition: 0.2s; }
         #btn-send { background: #2563eb; color: white; border: none; }
-        .mic-active { color: red; border-color: red; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .mic-active { color: #ef4444; border-color: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         
         #suggestions { padding: 10px 15px; display: flex; gap: 10px; overflow-x: auto; background: #fafafa; border-top: 1px solid #eee; }
-        .chip { background: white; border: 1px solid #2563eb; color: #2563eb; padding: 6px 12px; border-radius: 15px; font-size: 13px; white-space: nowrap; cursor: pointer; }
+        .chip { background: white; border: 1px solid #2563eb; color: #2563eb; padding: 6px 15px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -53,8 +53,8 @@
     <div id="avatar-view">
         <div id="loading-overlay">
             <div class="loader" id="spinner"></div>
-            <div id="load-text">Caricamento 3D...<br><small>Attendere qualche secondo</small></div>
-            <button id="start-btn" onclick="startExperience()">TOCCA PER INIZIARE</button>
+            <div id="load-text">Caricamento NAIA 3D...</div>
+            <button id="start-btn" onclick="startExperience()">AVVIA ESPERIENZA</button>
         </div>
         <div id="avatar-container"></div>
     </div>
@@ -65,11 +65,12 @@
         <div class="chip" onclick="quickAsk('Quali sono gli indirizzi?')">📚 Indirizzi</div>
         <div class="chip" onclick="quickAsk('Chi è la preside?')">🎓 Preside</div>
         <div class="chip" onclick="quickAsk('Dove si trova?')">📍 Posizione</div>
+        <div class="chip" onclick="quickAsk('Orari segreteria')">🕒 Orari</div>
     </div>
 
     <div id="input-zone">
         <button id="btn-mic" class="icon-btn" onclick="startDictation()">🎙️</button>
-        <input type="text" id="chat-input" placeholder="Chiedi a NAIA..." autocomplete="off">
+        <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
         <button id="btn-send" class="icon-btn" onclick="sendToBrain()">➤</button>
     </div>
 
@@ -88,22 +89,23 @@
         const spinner = document.getElementById('spinner');
         const loadText = document.getElementById('load-text');
 
-        let head; // Istanza dell'avatar
+        let head; // L'oggetto Avatar
 
-        // --- 1. FUNZIONE TTS SPECIALE (SOLUZIONE ERRORE ROSSO) ---
-        // Questa funzione forza l'uso di un servizio esterno, impedendo alla libreria di cercare Google.
-        async function customExternalTTS(text) {
-            console.log("TTS Richiesto:", text);
+        // --- 1. SOLUZIONE ERRORE ROSSO (TTS Custom) ---
+        // Questa funzione intercetta la richiesta di voce e usa StreamElements invece di Google.
+        async function customTTS(text) {
+            console.log("Generazione audio per:", text);
             try {
-                // Usiamo StreamElements con voce Carla (Italiano)
+                // Voce "Carla" (Italiano)
                 const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
                 const res = await fetch(url);
-                if (!res.ok) throw new Error("TTS Network Error");
+                if (!res.ok) throw new Error("Errore TTS Esterno");
                 const blob = await res.blob();
                 return await blob.arrayBuffer();
             } catch (err) {
-                console.error("TTS Fallito:", err);
-                throw err;
+                console.error("Errore TTS:", err);
+                // Se fallisce, restituisce un buffer vuoto per non bloccare l'avatar
+                return new ArrayBuffer(0);
             }
         }
 
@@ -112,14 +114,13 @@
             try {
                 const node = document.getElementById('avatar-container');
                 
-                // Configurazione ESPLICITA per evitare l'errore Google
                 head = new TalkingHead(node, {
-                    tts: customExternalTTS, // <--- QUI STA IL TRUCCO. Passiamo la funzione, non null.
+                    tts: customTTS, // <--- QUI INSERIAMO IL NOSTRO SISTEMA VOCALE
                     cameraView: "upper",
                     softShadows: true
                 });
 
-                // Carichiamo il modello
+                // Caricamento Modello
                 await head.showAvatar({
                     url: AVATAR_URL,
                     body: "F",
@@ -127,7 +128,7 @@
                     lipsyncLang: 'it'
                 });
 
-                // Se arriviamo qui, il 3D è pronto
+                // Tutto pronto
                 spinner.style.display = 'none';
                 loadText.innerText = "NAIA è pronta.";
                 startBtn.style.display = 'block';
@@ -135,10 +136,9 @@
             } catch (error) {
                 console.error("Errore Init 3D:", error);
                 spinner.style.display = 'none';
-                loadText.innerHTML = "Errore grafico.<br>La chat testuale funziona.";
+                loadText.innerHTML = "Impossibile caricare il 3D.<br>La chat funziona comunque.";
                 startBtn.innerText = "USA SOLO CHAT";
                 startBtn.style.display = 'block';
-                // Non blocchiamo tutto, permettiamo di usare la chat anche se il 3D fallisce
             }
         }
 
@@ -146,15 +146,16 @@
             loadOverlay.style.display = 'none';
             if(head) {
                 try {
-                    await head.audioCtx.resume(); // Sblocca audio browser
-                    const welcome = "Ciao! Sono NAIA. Chiedimi pure informazioni sulla scuola.";
+                    await head.audioCtx.resume(); // Sblocca audio
+                    const welcome = "Ciao! Sono NAIA. Sono l'intelligenza artificiale dell'Istituto Boccardi Tiberio. Come posso aiutarti?";
                     appendMessage(welcome, 'ai');
                     head.speakText(welcome);
-                } catch(e) { console.log("Audio start error", e); }
+                } catch(e) { console.log(e); }
+            } else {
+                appendMessage("Ciao! Sono NAIA (Modalità Solo Testo). Chiedimi pure!", 'ai');
             }
         };
 
-        // Avvio al caricamento pagina
         window.addEventListener('DOMContentLoaded', initAvatar);
 
         // --- FUNZIONI CHAT ---
@@ -173,72 +174,81 @@
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'it-IT';
             recognition.start();
-            recognition.onstart = () => { btn.classList.add("mic-active"); };
-            recognition.onend = () => { btn.classList.remove("mic-active"); if(inputField.value) sendToBrain(); };
+            recognition.onstart = () => { btn.classList.add("mic-active"); inputField.placeholder = "Ti ascolto..."; };
+            recognition.onend = () => { btn.classList.remove("mic-active"); inputField.placeholder = "Scrivi qui..."; if(inputField.value) sendToBrain(); };
             recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; };
         };
 
-        // --- 3. IL CERVELLO (PROMPT RIPRISTINATO DAL TUO FILE) ---
+        // --- 3. IL CERVELLO (PROMPT ORIGINALE REINSERITO) ---
         window.sendToBrain = async function() {
             const question = inputField.value.trim();
             if (!question) return;
 
-            // Stop audio precedente se l'utente parla sopra
-            if(head) head.stopSpeaking();
+            if(head) head.stopSpeaking(); // Ferma la voce precedente
 
             appendMessage(question, 'user');
             inputField.value = "";
             
-            // --- INSERISCO IL TUO SYSTEM PROMPT COMPLETO QUI ---
+            // --- QUI C'È TUTTA LA CONOSCENZA DEL TUO FILE ORIGINALE ---
             const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
-3. VIETATO USARE FORMATTAZIONE VISIVA COMPLESSA (niente #, niente **).
-4. Sii BREVE e concisa (massimo 2-3 frasi).
+3. VIETATO USARE FORMATTAZIONE VISIVA: NIENTE ASTERISCHI (*), niente elenchi puntati complessi.
+4. Sii BREVE e concisa (massimo 3 frasi).
 5. Usa un tono professionale ma amichevole.
-6. USA SOLO I DATI SCRITTI QUI SOTTO.
+6. USA SOLO I DATI SCRITTI IN QUESTA SEZIONE.
 
 SCHEDA INFORMATIVA SCUOLA:
 1. DATI IDENTIFICATIVI
-Istituto Giovanni Boccardi / Ugo Tiberio, Via Alcide De Gasperi 30, Termoli (CB).
-Email: CBIS01800L@istruzione.it, Sito: www.iisboccarditiberio.edu.it, Tel: 087583655.
+Istituto di Istruzione Superiore Giovanni Boccardi / Ugo Tiberio.
+Indirizzo: Via Alcide De Gasperi, 30, 86039 Termoli (CB).
+Email: CBIS01800L@istruzione.it, PEC: CBIS01800L@pec.istruzione.it
+Sito Web: www.iisboccarditiberio.edu.it
+Telefono: 0875 83655.
+
 2. STORIA
-Fusione di Tecnico Economico "Boccardi" e Tecnico Tecnologico "Tiberio" (Nautico/Geometri).
-Il Nautico ha certificazione ISO 9001.
-3. INDIRIZZI DI STUDIO
-Tecnologico (Tiberio):
-- CAIM (Macchinisti navali): Meccanica, macchine (5 ore/8 ore in 5°), laboratorio.
-- CMN (Capitani): Scienze navigazione (5 ore/8 ore in 5°), laboratorio.
-- Logistica: Trasporti intermodali.
-- CAT (Costruzioni Ambiente Territorio - ex Geometri).
-Economico (Boccardi):
-- AFM (Amministrazione Finanza Marketing).
-- SIA (Sistemi Informativi Aziendali): Informatica gestionale, database.
-- RIM (Relazioni Internazionali Marketing): 3 lingue straniere.
-- Turismo: Arte, territorio, 3 lingue.
-Corsi Serali per adulti disponibili.
-4. QUADRO ORARIO (Sintesi)
-Italiano (4 ore), Storia (2 ore), Inglese (3 ore) per tutti.
-Matematica (4 ore biennio, 3 triennio).
-Materie specifiche variano per indirizzo (Navigazione, Meccanica, Informatica, ecc.).
+L'istituto nasce dalla fusione del "Giovanni Boccardi" (ex Ragioneria) e dell'"Ugo Tiberio" (ex Nautico e Geometri).
+Il Nautico ha certificazione ISO 9001 (TUV SUD), fondamentale per titoli marittimi.
+
+3. OFFERTA FORMATIVA (INDIRIZZI)
+SETTORE TECNOLOGICO (Tiberio):
+- CAIM (Macchinisti): Conduzione Apparati e Impianti Marittimi.
+- CMN (Capitani): Conduzione del Mezzo Navale.
+- Logistica: Gestione trasporti.
+- CAT (ex Geometri): Costruzioni, Ambiente e Territorio.
+SETTORE ECONOMICO (Boccardi):
+- AFM: Amministrazione, Finanza e Marketing.
+- SIA: Sistemi Informativi Aziendali (Informatica gestionale).
+- RIM: Relazioni Internazionali (3 lingue straniere).
+- Turismo: Arte, territorio, lingue.
+CORSI SERALI: Disponibili per istruzione adulti.
+
+4. QUADRO ORARIO (SINTESI)
+CAIM (Macchine): Meccanica e Macchine (5 ore/8 ore in 5°), Elettrotecnica.
+CMN (Coperta): Scienze della Navigazione (5 ore/8 ore in 5°).
+Materie comuni: Italiano, Storia, Inglese, Matematica, Diritto.
+
 5. LABORATORI E STRUTTURE
-Planetario (Progetto "Oltre l'Infinito"), Simulatore Navale professionale, Sala Voga.
-Laboratori Informatici (Economy 2.0, SIA), Chimica, Fisica, Scienze Navigazione.
+Planetario (Progetto "Oltre l'Infinito"), Simulatore Navale professionale.
+Sala Voga, Laboratori Informatici (Economy 2.0, SIA), Chimica, Fisica.
 Stampanti 3D, Droni, Palestra interna, Campetti esterni, Due Aule Magne.
+
 6. PROGETTI
 Erasmus+ (viaggi studio), PCTO (ex Alternanza), Certificazioni Cambridge/DELF/DELE.
 Centro Sportivo Scolastico.
+
 7. ORGANIGRAMMA
-Dirigente: Prof.ssa Concetta Cimmino (Riceve Mar-Mer-Ven 11-13).
+Dirigente Scolastico: Prof.ssa Concetta Cimmino (Riceve Mar, Mer, Ven 11:00-13:00).
 Referente Economico: Prof. Tommaso Guerrera.
 Referente Tecnologico: Prof.ssa Barbara Mammarella.
-Segreteria: Lun-Sab 11-13.
-8. INFO PRATICHE
-Iscrizioni: Online portale "Unica" (Gennaio/Febbraio). Codice Tiberio: CBIS01800L.
-Voti: Registro Elettronico Spaggiari.
-Pagamenti: Solo PagoPA.
-Convitto: Non presente interno (solo convenzioni esterne).
+Segreteria: Lun-Sab, ore 11:00 - 13:00.
+
+8. FAQ
+- Iscrizioni: Online portale "Unica" (Gennaio/Febbraio). Codice: CBIS01800L.
+- Voti: Registro Elettronico Spaggiari.
+- Pagamenti: Solo tramite PagoPA.
+- Convitto: Non presente interno, solo strutture private esterne.
 
 Domanda dell'utente: ${question}
             `;
@@ -253,30 +263,31 @@ Domanda dell'utente: ${question}
                         system: SYSTEM_INSTRUCTION,
                         stream: false,
                         keep_alive: -1,
-                        options: { temperature: 0, num_predict: 500 }
+                        options: { temperature: 0, num_predict: 500, num_ctx: 4096 }
                     })
                 });
                 
-                if (!response.ok) throw new Error("Ollama Network Error");
+                if (!response.ok) throw new Error("Errore Ollama");
                 const data = await response.json();
                 
-                // Pulizia testo per evitare che legga caratteri strani
+                // PULIZIA TESTO PER LETTURA OTTIMALE
                 let cleanText = data.response
-                    .replace(/\*/g, "")
+                    .replace(/\*/g, "") // Via gli asterischi
                     .replace(/[#_]/g, "")
-                    .replace(/\n/g, ". "); 
+                    .replace(/\n/g, ". "); // A capo diventa pausa
                 
-                // Gestione lettura indirizzi web
+                // Lettura corretta siti web e email
                 cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => m.replace(/\./g, " punto "));
+                cleanText = cleanText.replace(/@/g, " chiocciola ");
 
                 appendMessage(cleanText, 'ai');
                 
-                // PARLA (Se l'avatar è attivo)
+                // PARLA
                 if(head) head.speakText(cleanText);
 
             } catch (error) {
                 console.error(error);
-                appendMessage("Non riesco a connettermi al cervello. Controlla Ngrok.", 'ai');
+                appendMessage("Errore di connessione al cervello. Controlla che Ngrok sia attivo.", 'ai');
             }
         };
         
