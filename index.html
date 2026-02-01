@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA 3D - School Assistant</title>
+    <title>NAIA 3D - GitHub Version</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
     <script type="importmap">
@@ -24,10 +24,25 @@
         #avatar-view { width: 100%; height: 45vh; position: relative; background: radial-gradient(circle, #e0e0e0 0%, #ffffff 100%); border-bottom: 1px solid #ccc; z-index: 1; }
         #avatar-container { width: 100%; height: 100%; display: block; }
 
-        /* OVERLAY CARICAMENTO (Semplice, senza tasti) */
-        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; }
+        /* OVERLAY CARICAMENTO + DEBUG */
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; padding: 20px; text-align: center; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* BOX ERRORI (Visibile solo se qualcosa si rompe) */
+        #debug-console { 
+            display: none; 
+            margin-top: 20px; 
+            padding: 10px; 
+            background: #ffe6e6; 
+            border: 1px solid red; 
+            color: #d8000c; 
+            font-family: monospace; 
+            font-size: 12px; 
+            max-width: 90%; 
+            word-break: break-all;
+            border-radius: 8px;
+        }
 
         /* CHAT */
         #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
@@ -52,8 +67,9 @@
 
     <div id="avatar-view">
         <div id="loading-overlay">
-            <div class="loader"></div>
-            <div id="load-text">Sto arrivando...</div>
+            <div class="loader" id="spinner"></div>
+            <div id="load-text">Sto caricando NAIA...</div>
+            <div id="debug-console"></div>
         </div>
         <div id="avatar-container"></div>
     </div>
@@ -75,67 +91,80 @@
     <script type="module">
         import { TalkingHead } from "talkinghead";
 
+        // CONFIGURAZIONE
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
-        
-        // IL LINK DEL TUO AVATAR
         const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024";
 
         const chatContainer = document.getElementById('chat-container');
         const inputField = document.getElementById('chat-input');
         const loadingOverlay = document.getElementById('loading-overlay');
+        const debugConsole = document.getElementById('debug-console');
+        const spinner = document.getElementById('spinner');
 
         let head; 
+
+        // FUNZIONE PER MOSTRARE ERRORI A VIDEO
+        window.logError = function(msg) {
+            console.error(msg);
+            spinner.style.display = "none";
+            document.getElementById('load-text').innerText = "Si è verificato un errore:";
+            debugConsole.style.display = "block";
+            debugConsole.innerText = msg;
+        }
+
+        // CATTURA ERRORI GLOBALI (es. Import falliti)
+        window.onerror = function(message, source, lineno, colno, error) {
+            window.logError(`Errore Script: ${message}`);
+        };
 
         // 1. CARICAMENTO
         async function initAvatar() {
             const nodeAvatar = document.getElementById('avatar-container');
             
-            head = new TalkingHead(nodeAvatar, {
-                ttsEndpoint: null, // Usa la voce del browser
-                cameraView: "upper",
-                softShadows: true
-            });
-
             try {
+                head = new TalkingHead(nodeAvatar, {
+                    ttsEndpoint: null, // Usa la voce del browser
+                    cameraView: "upper",
+                    softShadows: true
+                });
+
                 // Carica il modello
                 await head.showAvatar({
                     url: AVATAR_URL,
                     body: "F",
                     avatarMood: "neutral",
                     ttsLang: "it-IT", 
-                    ttsVoice: null, // Browser default
+                    ttsVoice: null,
                     lipsyncLang: 'it' 
                 });
                 
-                // NASCONDI CARICAMENTO IMMEDIATAMENTE
+                // SE SIAMO QUI, HA FUNZIONATO
                 loadingOverlay.style.display = "none";
-                
-                // Messaggio testuale di benvenuto
-                appendMessage("Ciao! Sono NAIA 3D. Scrivimi o clicca il microfono per parlarmi.", 'ai');
+                appendMessage("Ciao! Sono NAIA. Tocca lo schermo o scrivimi per iniziare.", 'ai');
 
-                // TRUCCO: Aggiungiamo un listener invisibile su tutta la pagina.
-                // Al PRIMO click ovunque (anche per selezionare la casella di testo), sblocchiamo l'audio.
-                document.body.addEventListener('click', unlockAudioContext, { once: true });
-                document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
-                document.body.addEventListener('keydown', unlockAudioContext, { once: true });
+                // SBLOCCO AUDIO INVISIBILE
+                const unlock = () => {
+                    if (head && head.audioCtx && head.audioCtx.state === 'suspended') {
+                        head.audioCtx.resume();
+                    }
+                    // Rimuovi i listener dopo il primo tocco
+                    document.body.removeEventListener('click', unlock);
+                    document.body.removeEventListener('touchstart', unlock);
+                    document.body.removeEventListener('keydown', unlock);
+                };
+                document.body.addEventListener('click', unlock);
+                document.body.addEventListener('touchstart', unlock);
+                document.body.addEventListener('keydown', unlock);
 
             } catch (error) {
-                console.error(error);
-                loadingOverlay.innerHTML = "<span style='color:red'>Errore Caricamento 3D</span>";
+                window.logError(error.message || error);
             }
         }
 
-        // Funzione che sblocca l'audio silenziosamente
-        function unlockAudioContext() {
-            if (head && head.audioCtx && head.audioCtx.state === 'suspended') {
-                head.audioCtx.resume().then(() => {
-                    console.log("Audio sbloccato con successo!");
-                });
-            }
-        }
-
+        // Avvia initAvatar quando il DOM è pronto
         window.addEventListener('DOMContentLoaded', initAvatar);
+
 
         // --- UTILS ---
         function appendMessage(text, sender) {
@@ -163,14 +192,14 @@
             const question = inputField.value.trim();
             if (!question) return;
 
-            // Assicuriamoci che l'audio sia sbloccato quando l'utente invia
-            unlockAudioContext();
+            // Tentativo di sblocco audio extra sicurezza
+            if (head && head.audioCtx && head.audioCtx.state === 'suspended') head.audioCtx.resume();
 
             appendMessage(question, 'user');
             inputField.value = "";
 
             if(!head) return;
-            head.stopSpeaking(); // Ferma se stava parlando
+            head.stopSpeaking();
 
             // --- TUA LOGICA ORIGINALE ---
             const SYSTEM_INSTRUCTION = `
