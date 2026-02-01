@@ -200,136 +200,123 @@
 </head>
 <body>
 
-    <header>
-        <h1>ISTITUTO BOCCARDI - TIBERIO</h1>
-        <div class="subtitle">Assistente Virtuale NAIA</div>
-    </header>
-
-    <div id="chat-container">
-        <div class="message ai-msg">Ciao! Sono NAIA, l'assistente dell'Istituto Boccardi-Tiberio. Chiedimi pure informazioni sulla scuola!</div>
+    <div id="avatar-container">
+        <img src="naia.jpg" id="naia-img" class="idle">
     </div>
 
-    <div id="avatar-section">
-        <div class="avatar-circle" id="avatar-wrapper">
-            <img src="naia.jpg" id="naia-img" alt="NAIA Avatar">
+    <div id="ui-layer">
+        <div id="status">NAIA PRONTA</div>
+        <div class="controls">
+            <button id="btn-mic" onclick="startDictation()">🎤</button>
+            <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
+            <button id="btn-send" onclick="sendToBrain()">➤</button>
         </div>
-        <div class="ripple" style="animation-delay: 0s"></div>
-        <div class="ripple" style="animation-delay: 0.5s"></div>
-    </div>
-
-    <div id="input-area">
-        <div id="status-pill">STA SCRIVENDO...</div>
-        <button id="btn-mic" onclick="startDictation()">🎙️</button>
-        <input type="text" id="chat-input" placeholder="Scrivi la tua domanda..." autocomplete="off">
-        <button id="btn-send" onclick="sendToBrain()">➜</button>
     </div>
 
     <script>
-        // CONFIGURAZIONE
+        
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
 
-        // RIFERIMENTI DOM
-        const statusPill = document.getElementById('status-pill');
-        const avatarWrapper = document.getElementById('avatar-wrapper');
-        const chatContainer = document.getElementById('chat-container');
-        const chatInput = document.getElementById('chat-input');
+        let voices = [];
+        let bestVoice = null;
+
+        const img = document.getElementById('naia-img');
+        const statusDiv = document.getElementById('status');
         const synth = window.speechSynthesis;
 
-        function setStatus(text) {
-            if(text) {
-                statusPill.innerText = text;
-                statusPill.classList.add('show-status');
-            } else {
-                statusPill.classList.remove('show-status');
-            }
-        }
+        let speechQueue = []; 
 
-        function appendMessage(text, sender) {
-            const div = document.createElement('div');
-            div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
-            div.innerHTML = text.replace(/\n/g, "<br>"); // Formattazione base
-            chatContainer.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // --- TTS CORRETTO (SENZA PUNTI INUTILI) ---
         function speak(text) {
             if (synth.speaking) synth.cancel();
 
             const allVoices = synth.getVoices();
-            const itVoices = allVoices.filter(v => v.lang.includes("it"));
-            const voice = itVoices.find(v => v.name.includes("Google") || v.name.includes("Alice")) || itVoices[0];
 
-            // Dividi in frasi per fluidità
+            const itVoices = allVoices.filter(v => v.lang.includes("it"));
+        
+            const femaleVoice = itVoices.find(v => v.name.includes("Google")) 
+                             || itVoices.find(v => v.name.includes("Elsa")) 
+                             || itVoices.find(v => v.name.includes("Alice"))
+                             || itVoices.find(v => v.name.includes("Federica"))
+                             || itVoices[0]; // Se non trova donne, usa la prima italiana che capita
+
             const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
-            playSequence(sentences, 0, voice);
+
+        
+            playNextSentence(sentences, 0, femaleVoice);
         }
 
-        function playSequence(sentences, index, voice) {
-            if (index >= sentences.length) {
-                avatarWrapper.classList.remove('speaking');
-                setStatus("");
+        function playNextSentence(sentences, index, voiceObj) {
+        if (index >= sentences.length) {
+                // Finito di parlare
+                if(typeof statusDiv !== 'undefined') statusDiv.innerText = "IN ASCOLTO";
+                if(typeof img !== 'undefined') {
+                    img.classList.remove('speaking');
+                    img.classList.add('idle');
+                }
                 return;
             }
-
-            const chunk = sentences[index].trim();
-            if(!chunk) { playSequence(sentences, index+1, voice); return; }
-
-            const utterance = new SpeechSynthesisUtterance(chunk);
-            if (voice) utterance.voice = voice;
+    
+            const textToSay = sentences[index].trim();
+            if(!textToSay) {
+                playNextSentence(sentences, index + 1, voiceObj);
+                return;
+            }
+    
+            const utterance = new SpeechSynthesisUtterance(textToSay);
+            
+            // APPLICA LA VOCE (Se esiste)
+            if (voiceObj) {
+                utterance.voice = voiceObj;
+            }
+            
             utterance.lang = 'it-IT';
-            utterance.rate = 1.05; // Leggermente più veloce e dinamico
-
+            utterance.rate = 0.9; 
+            utterance.pitch = 1.0;
+    
             utterance.onstart = () => {
-                avatarWrapper.classList.add('speaking');
-                setStatus("NAIA STA PARLANDO...");
+                if(typeof img !== 'undefined') {
+                    img.classList.remove('idle');
+                    img.classList.add('speaking');
+                }
+                if(typeof statusDiv !== 'undefined') statusDiv.innerText = "NAIA PARLA...";
             };
-
+    
             utterance.onend = () => {
-                playSequence(sentences, index + 1, voice);
+                playNextSentence(sentences, index + 1, voiceObj);
             };
-
+    
+            utterance.onerror = () => {
+                console.log("Errore audio, passo alla prossima");
+                playNextSentence(sentences, index + 1, voiceObj);
+            };
+    
             synth.speak(utterance);
         }
-
-        // --- RICONOSCIMENTO VOCALE ---
+        
         function startDictation() {
             const btnMic = document.getElementById('btn-mic');
-            
+            const inputField = document.getElementById('chat-input');
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert("Browser non supportato per la voce."); return; }
-            
+            if (!SpeechRecognition) { alert("Usa Chrome o Safari"); return; }
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
             recognition.start();
 
-            recognition.onstart = () => { 
-                btnMic.classList.add("active");
-                chatInput.placeholder = "Ti ascolto...";
-                setStatus("ASCOLTO...");
-            };
-            
-            recognition.onend = () => { 
-                btnMic.classList.remove("active");
-                chatInput.placeholder = "Scrivi la tua domanda...";
-                if(chatInput.value) sendToBrain();
-                else setStatus("");
-            };
-            
-            recognition.onresult = (e) => { chatInput.value = e.results[0][0].transcript; };
+            recognition.onstart = function() { btnMic.classList.add("mic-active"); };
+            recognition.onend = function() { btnMic.classList.remove("mic-active"); if(inputField.value) sendToBrain(); };
+            recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
         }
 
-        // --- CERVELLO (OLLAMA + FIX PUNTI) ---
         async function sendToBrain() {
-            const question = chatInput.value.trim();
-            if (!question) return;
-
-            appendMessage(question, 'user');
-            chatInput.value = "";
-            setStatus("ELABORAZIONE...");
-
-            const SYSTEM_INSTRUCTION = `
+                    const inputField = document.getElementById('chat-input');
+                    const question = inputField.value;
+                    if (!question) return;
+        
+                    // ============================================================
+                    // IL COPIONE DI NAIA (Modifica qui se vuoi cambiarle carattere)
+                    // ============================================================
+                    const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
@@ -349,8 +336,7 @@ denominazione Ufficiale, Istituto di Istruzione Superiore Giovanni Boccardi / Ug
 via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86039 Termoli (C,B), Molise
 pec (Posta Certificata) CBIS01800L@pec.istruzione.it
 email Istituzionale CBIS01800L@istruzione.it
-sito Web www.iisboccarditiberio.edu.it
-telefono segreteria 0 8 7 5 8 3 6 5 5
+sito Web www.iisboccarditiberio.edu.it/
 2. STORIA E IDENTITÀ
 l'istituto nasce dalla fusione di due storiche scuole di Termoli
 l'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959)
@@ -358,12 +344,12 @@ l'Istituto Tecnico Tecnologico "Ugo Tiberio" (ex Nautico e Geometri, con il Naut
 certificazioni: L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), fondamentale per il riconoscimento dei titoli marittimi internazionali
 3. OFFERTA FORMATIVA DETTAGLIATA
 l'istituto offre percorsi diurni (5 anni) e percorsi serali (istruzione per adulti)
-per il settore tecnologico Ugo Tiberio abbiamo a disposizione i seguenti corsi di studio
+per il settore tecnologico Ugo Tiberio abbiamo a disposizione i seguenti corsi di studio:
 indirizzo c a i m, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina
 indirizzo c m n, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani)
 indirizzo logistica, Gestione dei trasporti intermodali terra, mare e aria
 indirizzo c a t, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica
-per il settore economico Giovanni Boccardi abbiamo a disposizione i seguenti corsi di studio
+per il settore economico Giovanni Boccardi abbiamo a disposizione i seguenti corsi di studio:
 indirizzo a f m, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative
 indirizzi s i a, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno). Si studia informatica gestionale, database, coding applicato all'economia
 indirizzo r i m, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno). Studio di tre lingue straniere, geopolitica e relazioni internazionali
@@ -409,7 +395,7 @@ strutture Sportive, Palestra interna, sala attrezzi ginnici, tavoli da ping-pong
 sale Conferenze, Due aule magne per eventi e assemblee 
 6. PROGETTI E OPPORTUNITÀ (EXTRA-CURRICULARI)
 erasmus+ (Accreditamento 2022-2027) La scuola è accreditata come polo di eccellenza per la mobilità europea, offre viaggi studio gratuiti e stage all'estero per studenti e docenti
-F S L (ex Alternanza Scuola-Lavoro) Collaborazioni con aziende del territorio, studi professionali, compagnie di navigazione, enti turistici e banche per tirocini formativi
+F,S,L, (ex Alternanza Scuola-Lavoro) Collaborazioni con aziende del territorio, studi professionali, compagnie di navigazione, enti turistici e banche per tirocini formativi
 certificazioni Linguistiche Preparazione per Cambridge (Inglese), DELF (Francese), DELE (Spagnolo)
 centro Sportivo Scolastico Attività pomeridiane (es. canottaggio, sport di squadra)
 7. ORGANIGRAMMA E ORARI DI RICEVIMENTO
@@ -432,15 +418,27 @@ Q: C'è il convitto?
 A: Non risulta presente un convitto interno gestito direttamente dalla scuola. Gli studenti fuori sede solitamente si appoggiano a strutture private o convitti convenzionati nella zona di Termoli (verificare disponibilità aggiornata in segreteria)
 Q: Accettate pagamenti in contanti?
 A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA
-Domanda: ${question}`;
+
+
+                
+                Domanda dell'utente: ${question}
+           `;
+            // ============================================================
+
+            statusDiv.innerText = "ELABORAZIONE...";
+            img.style.filter = "grayscale(100%)";
+            inputField.value = "";
 
             try {
                 const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         model: MODEL_NAME,
-                        prompt: SYSTEM_INSTRUCTION,
+                        prompt: question, 
+                        system: SYSTEM_INSTRUCTION,
                         stream: false,
                         keep_alive: -1,
                         options: {
@@ -452,64 +450,46 @@ Domanda: ${question}`;
                     })
                 });
                 
+                if (!response.ok) throw new Error("Errore Network");
                 const data = await response.json();
-
-                // --- PULIZIA TESTO INTELLIGENTE ---
-                let cleanText = data.response;
-
-                // 1. Rimuove Markdown (* e #)
-                cleanText = cleanText.replace(/[*#]/g, "");
-
-                // 2. Converte i "nuova riga" in spazi (NON in punti, per evitare doppi punti)
-                // Se c'è un doppio a capo, mettiamo un punto. Se c'è un a capo singolo, solo spazio.
-                cleanText = cleanText.replace(/\n\n/g, ". "); 
-                cleanText = cleanText.replace(/\n/g, " ");
-
-                // 3. Gestione Email e Siti (Punti -> Parole per il parlato)
-                // Solo per l'audio (creiamo una variabile separata per il parlato)
-                let audioText = cleanText;
-
-                audioText = audioText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => {
-                    return m.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
-                });
-                audioText = audioText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => {
-                     return m.replace(/\./g, " punto ");
-                });
-
-                // 4. FIX PUNTEGGIATURA (Il cuore della correzione)
-                // Rimuove spazi doppi creati dalla pulizia
-                cleanText = cleanText.replace(/\s+/g, " "); 
-                audioText = audioText.replace(/\s+/g, " ");
                 
-                // Rimuove pattern come ". ." oppure ".." oppure ". ."
-                cleanText = cleanText.replace(/\.\s*\./g, ".");
-                audioText = audioText.replace(/\.\s*\./g, ".");
+                let rawText = data.response;
+            
+                // 1. Cancella specificamente gli asterischi in ogni forma
+                let cleanText = rawText.replace(/\*/g, ""); 
+                // 1. TRADUTTORE EMAIL (La parte che volevi)
+                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                    return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
+                });
 
-                // Rimuove punto se c'è già un ! o ? (Es: "Ciao!. Come stai" -> "Ciao! Come stai")
-                cleanText = cleanText.replace(/([?!])\s*\./g, "$1");
-                audioText = audioText.replace(/([?!])\s*\./g, "$1");
-
-                // Rimuove eventuali punti all'inizio della frase
-                cleanText = cleanText.replace(/^\.\s*/, "");
-                audioText = audioText.replace(/^\.\s*/, "");
-
-                // --- FINE PULIZIA ---
-
-                appendMessage(cleanText, 'ai'); // A video testo normale
-                speak(audioText); // All'audio testo con "chiocciola" e "punto"
+                // 2. TRADUTTORE SITI WEB
+                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
+                     return match.replace(/\./g, " punto ");
+                });
+                // 2. Cancella cancelletti, underscore e markdown vari
+                cleanText = cleanText.replace(/[#_`~]/g, "");
+    
+                // 3. Sistema la punteggiatura (A capo -> Punto)
+                cleanText = cleanText.replace(/\n/g, ". ");
+                
+                // 4. Toglie "Sono NAIA"
+                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
+                
+                img.style.filter = "none";
+                speak(cleanText);
 
             } catch (error) {
                 console.error(error);
-                setStatus("ERRORE CONNESSIONE");
-                appendMessage("Non riesco a connettermi al server scolastico.", 'ai');
+                img.style.filter = "none";
+                statusDiv.innerText = "ERRORE DI RETE";
+                alert("Errore di connessione. Controlla Ngrok!");
             }
         }
-
-        // Invio con Invio
-        chatInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
+        document.getElementById("chat-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
     </script>
 </body>
 </html>
+
 
 
 
