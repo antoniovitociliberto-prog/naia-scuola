@@ -17,113 +17,33 @@
     </script>
 
     <style>
-        /* --- 1. SETUP GENERALE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            margin: 0; padding: 0;
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f7f6;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden; /* Blocca scroll pagina intera */
-            display: flex;
-            flex-direction: column;
-        }
+        body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: #f4f7f6; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* --- 2. ZONA AVATAR 3D (ALTO - 45%) --- */
-        #avatar-view {
-            width: 100%;
-            height: 45vh; /* L'avatar occupa quasi metà schermo */
-            position: relative;
-            background: radial-gradient(circle, #e0e0e0 0%, #ffffff 100%);
-            border-bottom: 1px solid #ccc;
-            z-index: 1;
-        }
+        /* ZONA AVATAR */
+        #avatar-view { width: 100%; height: 45vh; position: relative; background: radial-gradient(circle, #e0e0e0 0%, #ffffff 100%); border-bottom: 1px solid #ccc; z-index: 1; }
+        #avatar-container { width: 100%; height: 100%; display: block; }
 
-        #avatar-container {
-            width: 100%; height: 100%;
-            display: block;
-        }
-
-        /* Overlay di caricamento (mentre scarica il modello 3D) */
-        #loading-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.95);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: 600; color: #2563eb; z-index: 100; gap: 10px;
-        }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        /* OVERLAY CARICAMENTO (Semplice, senza tasti) */
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- 3. CHAT AREA (CENTRO - Resto dello spazio) --- */
-        #chat-container {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex; flex-direction: column; gap: 15px;
-            scroll-behavior: smooth;
-            background: #fff;
-        }
+        /* CHAT */
+        #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
+        .message { max-width: 85%; padding: 14px 20px; border-radius: 20px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); animation: popIn 0.3s ease; }
+        .ai-msg { align-self: flex-start; background: #f0f2f5; color: #333; border: 1px solid #e0e0e0; border-bottom-left-radius: 4px; }
+        .user-msg { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 4px; }
 
-        .message {
-            max-width: 85%; padding: 14px 20px; border-radius: 20px;
-            font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            animation: popIn 0.3s ease;
-        }
-        
-        .ai-msg { 
-            align-self: flex-start; 
-            background: #f0f2f5; 
-            color: #333; 
-            border-bottom-left-radius: 4px; 
-            border: 1px solid #e0e0e0; 
-        }
-        
-        .user-msg { 
-            align-self: flex-end; 
-            background: #2563eb; 
-            color: white; 
-            border-bottom-right-radius: 4px; 
-        }
-
-        /* --- 4. SUGGERIMENTI (Chips) --- */
-        #suggestions {
-            padding: 10px 15px;
-            display: flex; gap: 10px; overflow-x: auto;
-            background: #fafafa; border-top: 1px solid #eee;
-        }
-        #suggestions::-webkit-scrollbar { display: none; } /* Nasconde scrollbar */
-        
-        .chip {
-            background: white; border: 1px solid #2563eb; color: #2563eb;
-            padding: 8px 15px; border-radius: 20px; font-size: 13px;
-            white-space: nowrap; cursor: pointer; transition: 0.2s;
-        }
-        .chip:hover { background: #2563eb; color: white; }
-
-        /* --- 5. INPUT BAR (BASSO) --- */
-        #input-zone {
-            padding: 15px 20px; background: white; border-top: 1px solid #eee;
-            display: flex; align-items: center; gap: 10px;
-        }
-        
-        #chat-input {
-            flex: 1; background: #f3f4f6; border: none; padding: 15px 20px;
-            border-radius: 30px; font-size: 16px; outline: none; transition: 0.3s;
-        }
-        #chat-input:focus { background: #fff; box-shadow: inset 0 0 0 2px #2563eb; }
-        
-        .icon-btn {
-            width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
-            transition: 0.2s; flex-shrink: 0;
-        }
-        
-        #btn-send { background: #2563eb; color: white; transform: rotate(-45deg); padding-left: 5px; padding-bottom: 5px; }
-        #btn-mic { background: white; border: 1px solid #ddd; color: #555; }
+        /* CONTROLLI */
+        #input-zone { padding: 15px 20px; background: white; border-top: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        #chat-input { flex: 1; background: #f3f4f6; border: none; padding: 15px 20px; border-radius: 30px; font-size: 16px; outline: none; }
+        .icon-btn { width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; background: white; border: 1px solid #ddd; color: #555; }
+        #btn-send { background: #2563eb; color: white; border: none; }
         .mic-active { color: #ef4444 !important; border-color: #ef4444 !important; animation: pulseRed 1.5s infinite; }
-
+        #suggestions { padding: 10px 15px; display: flex; gap: 10px; overflow-x: auto; background: #fafafa; border-top: 1px solid #eee; }
+        .chip { background: white; border: 1px solid #2563eb; color: #2563eb; padding: 8px 15px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; }
+        
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
@@ -133,20 +53,17 @@
     <div id="avatar-view">
         <div id="loading-overlay">
             <div class="loader"></div>
-            <div id="load-text">Caricamento NAIA 3D...</div>
+            <div id="load-text">Sto arrivando...</div>
         </div>
         <div id="avatar-container"></div>
     </div>
 
-    <div id="chat-container">
-        <div class="message ai-msg">Ciao! Sto caricando il mio corpo 3D... un attimo di pazienza!</div>
-    </div>
+    <div id="chat-container"></div>
 
     <div id="suggestions">
         <div class="chip" onclick="quickAsk('Quali sono gli indirizzi?')">📚 Indirizzi</div>
         <div class="chip" onclick="quickAsk('Dammi i contatti')">📞 Contatti</div>
         <div class="chip" onclick="quickAsk('Dove si trova?')">📍 Posizione</div>
-        <div class="chip" onclick="quickAsk('Chi è il dirigente?')">🎓 Preside</div>
     </div>
 
     <div id="input-zone">
@@ -158,119 +75,104 @@
     <script type="module">
         import { TalkingHead } from "talkinghead";
 
-        // ==========================================
-        // CONFIGURAZIONE
-        // ==========================================
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
         
-        // LINK DEL TUO AVATAR READY PLAYER ME
+        // IL LINK DEL TUO AVATAR
         const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024";
 
-        // RIFERIMENTI DOM
         const chatContainer = document.getElementById('chat-container');
         const inputField = document.getElementById('chat-input');
         const loadingOverlay = document.getElementById('loading-overlay');
-        const loadText = document.getElementById('load-text');
 
-        let head; // Variabile globale per l'istanza 3D
+        let head; 
 
-        // --- 1. CARICAMENTO AVATAR 3D ---
+        // 1. CARICAMENTO
         async function initAvatar() {
             const nodeAvatar = document.getElementById('avatar-container');
             
-            // Inizializza la testa parlante
             head = new TalkingHead(nodeAvatar, {
-                ttsEndpoint: "https://eu-texttospeech.googleapis.com/v1beta1/text:synthesize", // Usa API Google se disponibili, fallback browser
-                cameraView: "upper", // Inquadratura mezzo busto
+                ttsEndpoint: null, // Usa la voce del browser
+                cameraView: "upper",
                 softShadows: true
             });
 
             try {
-                // Carica il modello dal link fornito
+                // Carica il modello
                 await head.showAvatar({
                     url: AVATAR_URL,
-                    body: "F", // Female
+                    body: "F",
                     avatarMood: "neutral",
-                    ttsLang: "it-IT", // Lingua Italiana
-                    ttsVoice: "it-IT-Standard-A", // Voce preferita (se supportata dal browser/API)
+                    ttsLang: "it-IT", 
+                    ttsVoice: null, // Browser default
                     lipsyncLang: 'it' 
                 });
                 
-                // Avatar caricato con successo
+                // NASCONDI CARICAMENTO IMMEDIATAMENTE
                 loadingOverlay.style.display = "none";
                 
-                // Messaggio iniziale
-                const welcomeText = "Eccomi qui in 3D! Sono NAIA, l'assistente scolastica. Come posso aiutarti?";
-                appendMessage(welcomeText, 'ai');
-                head.speakText(welcomeText);
+                // Messaggio testuale di benvenuto
+                appendMessage("Ciao! Sono NAIA 3D. Scrivimi o clicca il microfono per parlarmi.", 'ai');
+
+                // TRUCCO: Aggiungiamo un listener invisibile su tutta la pagina.
+                // Al PRIMO click ovunque (anche per selezionare la casella di testo), sblocchiamo l'audio.
+                document.body.addEventListener('click', unlockAudioContext, { once: true });
+                document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
+                document.body.addEventListener('keydown', unlockAudioContext, { once: true });
 
             } catch (error) {
-                console.error("Errore caricamento Avatar:", error);
-                loadText.innerText = "Errore Caricamento 3D";
-                // L'app continuerà a funzionare come chat testuale anche se il 3D fallisce
+                console.error(error);
+                loadingOverlay.innerHTML = "<span style='color:red'>Errore Caricamento 3D</span>";
             }
         }
 
-        // Avvia il caricamento appena la pagina è pronta
+        // Funzione che sblocca l'audio silenziosamente
+        function unlockAudioContext() {
+            if (head && head.audioCtx && head.audioCtx.state === 'suspended') {
+                head.audioCtx.resume().then(() => {
+                    console.log("Audio sbloccato con successo!");
+                });
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', initAvatar);
 
-        // --- 2. FUNZIONI UTILITY INTERFACCIA ---
+        // --- UTILS ---
         function appendMessage(text, sender) {
             const div = document.createElement('div');
             div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
-            div.innerHTML = text.replace(/\n/g, "<br>"); // Preserva le nuove righe
+            div.innerHTML = text.replace(/\n/g, "<br>");
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Espongo le funzioni alla finestra globale per poterle chiamare dall'HTML (onclick)
-        window.quickAsk = function(text) {
-            inputField.value = text;
-            sendToBrain();
-        }
+        window.quickAsk = function(text) { inputField.value = text; sendToBrain(); }
 
         window.startDictation = function() {
             const btn = document.getElementById('btn-mic');
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.lang = 'it-IT';
             recognition.start();
-            
-            recognition.onstart = () => { 
-                btn.classList.add("mic-active"); 
-                inputField.placeholder = "Ti ascolto..."; 
-            };
-            
-            recognition.onend = () => { 
-                btn.classList.remove("mic-active"); 
-                inputField.placeholder = "Scrivi qui..."; 
-                if(inputField.value) sendToBrain(); 
-            };
-            
-            recognition.onresult = (e) => { 
-                inputField.value = e.results[0][0].transcript; 
-            };
+            recognition.onstart = () => { btn.classList.add("mic-active"); inputField.placeholder = "Ti ascolto..."; };
+            recognition.onend = () => { btn.classList.remove("mic-active"); inputField.placeholder = "Scrivi qui..."; if(inputField.value) sendToBrain(); };
+            recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; };
         };
 
-        // --- 3. IL CERVELLO (OLLAMA + LOGICA) ---
-        // Questa funzione è IDENTICA alla tua logica originale, 
-        // cambia solo l'output finale: invece di speak() usiamo head.speakText()
+        // --- CERVELLO (Ollama) ---
         window.sendToBrain = async function() {
             const question = inputField.value.trim();
             if (!question) return;
 
+            // Assicuriamoci che l'audio sia sbloccato quando l'utente invia
+            unlockAudioContext();
+
             appendMessage(question, 'user');
             inputField.value = "";
 
-            // Se l'avatar non ha finito di caricare, avvisa
-            if(!head) {
-                appendMessage("Attendi un attimo, mi sto ancora preparando...", 'ai');
-                return;
-            }
+            if(!head) return;
+            head.stopSpeaking(); // Ferma se stava parlando
 
-            // ============================================================
-            // IL TUO SYSTEM PROMPT ORIGINALE (NON TOCCATO)
-            // ============================================================
+            // --- TUA LOGICA ORIGINALE ---
             const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli, DEVI RISPONDERE ESATTAMENTE COSI LA PRIMA VOLTA CHE TI VIENE POSTA UNA DOMANDA.
@@ -378,8 +280,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 
                 
                 Domanda dell'utente: ${question}
-           `;
-            // ============================================================
+            `;
 
             try {
                 const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
@@ -399,15 +300,9 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 const data = await response.json();
                 
                 let rawText = data.response;
-            
-                // --- PULIZIA TESTO (TUA LOGICA ORIGINALE) ---
                 let cleanText = rawText.replace(/\*/g, ""); 
-                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
-                    return match.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
-                });
-                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
-                     return match.replace(/\./g, " punto ");
-                });
+                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, m => m.replace(/@/g, " chiocciola ").replace(/\./g, " punto "));
+                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, m => m.replace(/\./g, " punto "));
                 cleanText = cleanText.replace(/[#_`~]/g, "");
                 cleanText = cleanText.replace(/\n\n/g, ". ");
                 cleanText = cleanText.replace(/\n/g, " ");
@@ -415,15 +310,14 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 cleanText = cleanText.replace(/\.\s*\./g, "."); 
                 cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
 
-                // --- AZIONE 3D ---
                 appendMessage(cleanText, 'ai');
                 
-                // INVECE DI speak(cleanText), ORA CHIAMIAMO L'AVATAR 3D:
+                // PARLA!
                 head.speakText(cleanText);
 
             } catch (error) {
                 console.error(error);
-                appendMessage("Errore di connessione. Controlla Ngrok!", 'ai');
+                appendMessage("Errore di connessione.", 'ai');
             }
         };
 
