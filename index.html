@@ -3,122 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA - School AI</title>
+    <title>NAIA - School App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- LAYOUT GENERALE --- */
-        body { 
-            margin: 0; overflow: hidden; background-color: #000; 
-            font-family: 'Segoe UI', sans-serif; 
-            display: flex; flex-direction: column; height: 100vh;
-        }
+        /* --- 1. SFONDO E STRUTTURA (STILE APP) --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* --- ZONA 1: AVATAR (In alto) --- */
-        #avatar-section { 
-            flex: 0 0 35vh; /* Occupa il 35% dell'altezza schermo */
-            display: flex; align-items: center; justify-content: center;
-            background: radial-gradient(circle, #222 0%, #000 100%);
-            border-bottom: 1px solid #333;
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Poppins', sans-serif;
+            /* Sfondo Blu "Deep Sea" come nell'immagine */
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); 
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Il "Telefono" o Card Principale */
+        #app-frame {
+            width: 100%;
+            max-width: 480px; /* Larghezza tipica smartphone */
+            height: 100%;
+            max-height: 900px;
+            background: #f4f7f6; /* Bianco sporco rilassante */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        @media (min-width: 500px) {
+            #app-frame {
+                height: 90vh;
+                border-radius: 40px; /* Bordi arrotondati se su PC */
+                overflow: hidden;
+            }
+        }
+
+        /* --- 2. HEADER CON AVATAR --- */
+        header {
+            background: white;
+            padding: 30px 20px 20px 20px;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .avatar-container {
+            width: 100px; height: 100px;
+            margin: 0 auto 10px auto;
+            border-radius: 50%;
+            padding: 4px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         #naia-img {
-            height: 90%; width: auto; max-width: 90%; object-fit: contain;
-            border-radius: 20px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
-            transition: all 0.3s ease;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            transition: transform 0.3s;
         }
 
-        /* Animazioni Avatar */
-        .idle { animation: breathe 4s infinite ease-in-out; }
-        @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.02); filter: brightness(1.2); } 100% { transform: scale(1); filter: brightness(1); } }
+        h1 { margin: 0; font-size: 20px; color: #333; font-weight: 600; }
+        .subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+        .status-dot { height: 8px; width: 8px; background-color: #00ff88; border-radius: 50%; display: inline-block; margin-right: 6px; }
 
-        .speaking { animation: talkPulse 0.2s infinite; border: 2px solid #00ffff; }
-        @keyframes talkPulse { 0% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } 50% { box-shadow: 0 0 50px #00ffff; transform: scale(1.01); } 100% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } }
+        /* Animazione quando parla */
+        .speaking { animation: pulseSpeak 1s infinite; border: 3px solid #00d2ff; }
+        @keyframes pulseSpeak { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* --- ZONA 2: CHAT (Al centro, scorrevole) --- */
-        #chat-container {
-            flex: 1; /* Occupa tutto lo spazio rimanente */
-            background: #111;
+        /* --- 3. CHAT AREA --- */
+        #chat-area {
+            flex: 1;
             padding: 20px;
-            overflow-y: auto; /* Permette lo scroll */
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 15px;
+            scroll-behavior: smooth;
         }
 
-        /* Stile delle nuvolette */
         .message {
             max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 16px;
-            line-height: 1.4;
-            animation: fadeIn 0.3s ease;
-            word-wrap: break-word;
+            padding: 14px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: popIn 0.3s ease;
         }
 
-        /* Messaggio Utente (BLU, Destra) */
+        .ai-msg {
+            align-self: flex-start;
+            background: white;
+            color: #444;
+            border-bottom-left-radius: 4px;
+        }
+
         .user-msg {
             align-self: flex-end;
-            background-color: #007bff;
+            background: #2563eb; /* Blu Intenso */
             color: white;
             border-bottom-right-radius: 4px;
         }
 
-        /* Messaggio AI (BIANCO, Sinistra) */
-        .ai-msg {
-            align-self: flex-start;
-            background-color: #ffffff;
-            color: #000;
-            border-bottom-left-radius: 4px;
+        /* --- 4. SUGGERIMENTI (Chips) --- */
+        #suggestions {
+            padding: 10px 20px;
+            display: flex; gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none; /* No scrollbar */
+        }
+        #suggestions::-webkit-scrollbar { display: none; }
+
+        .chip {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            color: #555;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .chip:hover { background: #2563eb; color: white; border-color: #2563eb; }
+
+        /* --- 5. INPUT BAR (In basso) --- */
+        #input-zone {
+            padding: 20px;
+            background: white;
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- ZONA 3: CONTROLLI (In basso) --- */
-        #ui-layer {
-            background: #000;
-            padding: 10px 15px 20px 15px;
-            display: flex; flex-direction: column; gap: 8px;
-            border-top: 1px solid #333;
+        #chat-input {
+            flex: 1;
+            background: #f3f4f6;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 30px;
+            font-size: 15px;
+            outline: none;
+            color: #333;
         }
 
-        #status { 
-            text-align: center; color: #00ffff; font-size: 12px; margin-bottom: 5px; letter-spacing: 1px;
+        .icon-btn {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            transition: 0.2s;
         }
 
-        .controls { display: flex; gap: 10px; }
+        #btn-mic { background: white; color: #555; border: 1px solid #eee; }
+        #btn-mic.active { color: #ef4444; border-color: #ef4444; animation: pulseRed 1.5s infinite; }
         
-        input { 
-            flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #444; 
-            background: #222; color: white; font-size: 16px; outline: none; 
-        }
+        #btn-send { background: #2563eb; color: white; transform: rotate(-45deg); padding-left: 5px; padding-bottom: 5px; }
+        #btn-send:active { transform: scale(0.9) rotate(-45deg); }
+
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         
-        button { border: none; cursor: pointer; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
-        button:active { transform: scale(0.9); }
-        #btn-send { background: #00ffff; color: #000; }
-        #btn-mic { background: #ff0055; color: #fff; }
-        .mic-active { background: red !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        #status-text { font-size: 10px; text-align: center; color: #999; margin-bottom: 5px; min-height: 15px; }
 
     </style>
 </head>
 <body>
 
-    <div id="avatar-section">
-        <img src="naia.jpg" id="naia-img" class="idle" onerror="this.src='https://via.placeholder.com/400x600/000000/00FFFF?text=NAIA'">
-    </div>
+    <div id="app-frame">
+        <header>
+            <div class="avatar-container">
+                <img src="naia.jpg" id="naia-img" alt="NAIA" onerror="this.src='https://via.placeholder.com/150/2563eb/FFFFFF?text=NAIA'">
+            </div>
+            <h1><span class="status-dot"></span>NAIA</h1>
+            <div class="subtitle">Boccardi - Tiberio Assistant</div>
+        </header>
 
-    <div id="chat-container">
-        <div class="message ai-msg">
-            Ciao! Sono NAIA, l'assistente dell'Istituto Boccardi-Tiberio. Come posso aiutarti oggi?
+        <div id="chat-area">
+            <div class="message ai-msg">
+                Ciao! 👋 Sono NAIA. Chiedimi pure informazioni su indirizzi, contatti o iscrizioni.
+            </div>
         </div>
-    </div>
 
-    <div id="ui-layer">
-        <div id="status">NAIA PRONTA</div>
-        <div class="controls">
-            <button id="btn-mic" onclick="startDictation()">🎤</button>
-            <input type="text" id="chat-input" placeholder="Scrivi una domanda..." autocomplete="off">
-            <button id="btn-send" onclick="sendToBrain()">➤</button>
+        <div id="suggestions">
+            <div class="chip" onclick="quickAsk('Quali sono gli indirizzi?')">📚 Indirizzi</div>
+            <div class="chip" onclick="quickAsk('Dammi i contatti')">📞 Contatti</div>
+            <div class="chip" onclick="quickAsk('Dove si trova?')">📍 Dove siamo</div>
+            <div class="chip" onclick="quickAsk('Chi è la preside?')">🎓 Preside</div>
+        </div>
+
+        <div id="input-zone">
+            <div style="position: absolute; bottom: 85px; width: 100%; left:0; text-align: center;" id="status-text"></div>
+            <button id="btn-mic" class="icon-btn" onclick="startDictation()">🎙️</button>
+            <input type="text" id="chat-input" placeholder="Scrivi un messaggio..." autocomplete="off">
+            <button id="btn-send" class="icon-btn" onclick="sendToBrain()">➤</button>
         </div>
     </div>
     
@@ -410,6 +503,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
