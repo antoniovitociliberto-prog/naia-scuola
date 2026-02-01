@@ -441,7 +441,14 @@ Domanda: ${question}`;
                     body: JSON.stringify({
                         model: MODEL_NAME,
                         prompt: SYSTEM_INSTRUCTION,
-                        stream: false
+                        stream: false,
+                        options: {
+                            temperature: 0.1,   // 0 = Nessuna creatività (Robot preciso)
+                            top_k: 10,        // Considera solo le parole più probabili
+                            top_p: 0.5,       // Taglia le risposte assurde
+                            repeat_penalty: 1.2, // Evita che ripeta le cose
+                            num_predict: 600
+                        }
                     })
                 });
                 
@@ -503,6 +510,7 @@ Domanda: ${question}`;
     </script>
 </body>
 </html>
+
 
 
 
