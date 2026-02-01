@@ -206,7 +206,7 @@
     </header>
 
     <div id="chat-container">
-        <div class="message ai-msg">Ciao! Sono NAIA. Come posso aiutarti oggi a scuola?</div>
+        <div class="message ai-msg">Ciao! Sono NAIA, l'assistente dell'Istituto Boccardi-Tiberio. Chiedimi pure informazioni sulla scuola!</div>
     </div>
 
     <div id="avatar-section">
@@ -440,14 +440,15 @@ Domanda: ${question}`;
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: MODEL_NAME,
-                        prompt: SYSTEM_INSTRUCTION,
+                        prompt: question, 
+                        system: SYSTEM_INSTRUCTION,
                         stream: false,
+                        keep_alive: -1,
                         options: {
-                            temperature: 0.1,   // 0 = Nessuna creatività (Robot preciso)
-                            top_k: 10,        // Considera solo le parole più probabili
-                            top_p: 0.5,       // Taglia le risposte assurde
-                            repeat_penalty: 1.2, // Evita che ripeta le cose
-                            num_predict: 600
+                            temperature: 0,
+                            num_predict: 600,
+                            seed: 123,      
+                            num_ctx: 4096   
                         }
                     })
                 });
@@ -510,6 +511,7 @@ Domanda: ${question}`;
     </script>
 </body>
 </html>
+
 
 
 
