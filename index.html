@@ -5,96 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NAIA - School AI</title>
     <style>
+        /* --- LAYOUT GENERALE --- */
         body { 
             margin: 0; overflow: hidden; background-color: #000; 
             font-family: 'Segoe UI', sans-serif; 
             display: flex; flex-direction: column; height: 100vh;
         }
         
-        /* --- AVATAR (Sfondo alto) --- */
-        #avatar-container { 
-            flex: 1; /* Prende lo spazio libero sopra */
+        /* --- ZONA 1: AVATAR (In alto) --- */
+        #avatar-section { 
+            flex: 0 0 35vh; /* Occupa il 35% dell'altezza schermo */
             display: flex; align-items: center; justify-content: center;
             background: radial-gradient(circle, #222 0%, #000 100%);
-            position: relative;
-            z-index: 1;
+            border-bottom: 1px solid #333;
         }
 
         #naia-img {
-            height: 40vh; /* Un po' più piccola per lasciare spazio alla chat */
-            width: auto; max-width: 90%; object-fit: contain;
-            border-radius: 20px; box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            height: 90%; width: auto; max-width: 90%; object-fit: contain;
+            border-radius: 20px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
             transition: all 0.3s ease;
         }
 
+        /* Animazioni Avatar */
         .idle { animation: breathe 4s infinite ease-in-out; }
         @keyframes breathe { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.02); filter: brightness(1.2); } 100% { transform: scale(1); filter: brightness(1); } }
 
         .speaking { animation: talkPulse 0.2s infinite; border: 2px solid #00ffff; }
         @keyframes talkPulse { 0% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } 50% { box-shadow: 0 0 50px #00ffff; transform: scale(1.01); } 100% { box-shadow: 0 0 20px #00ffff; transform: scale(1); } }
 
-        /* --- CHAT AREA (Design Domanda/Risposta) --- */
-        #chat-window {
-            flex: 1; /* Prende la metà inferiore */
-            background: rgba(20, 20, 20, 0.9);
-            border-top: 2px solid #00ffff;
+        /* --- ZONA 2: CHAT (Al centro, scorrevole) --- */
+        #chat-container {
+            flex: 1; /* Occupa tutto lo spazio rimanente */
+            background: #111;
             padding: 20px;
-            overflow-y: auto;
+            overflow-y: auto; /* Permette lo scroll */
             display: flex;
             flex-direction: column;
             gap: 15px;
-            z-index: 10;
         }
 
+        /* Stile delle nuvolette */
         .message {
             max-width: 80%;
-            padding: 12px 18px;
-            border-radius: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
             font-size: 16px;
             line-height: 1.4;
             animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
         }
 
-        /* STILE UTENTE (Blu) */
+        /* Messaggio Utente (BLU, Destra) */
         .user-msg {
             align-self: flex-end;
-            background-color: #007bff; /* Blu acceso */
+            background-color: #007bff;
             color: white;
-            border-bottom-right-radius: 2px;
+            border-bottom-right-radius: 4px;
         }
 
-        /* STILE AI (Bianco) */
+        /* Messaggio AI (BIANCO, Sinistra) */
         .ai-msg {
             align-self: flex-start;
             background-color: #ffffff;
             color: #000;
-            border-bottom-left-radius: 2px;
-            border: 1px solid #ccc;
+            border-bottom-left-radius: 4px;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- CONTROLLI --- */
+        /* --- ZONA 3: CONTROLLI (In basso) --- */
         #ui-layer {
-            background: #111;
-            padding: 15px;
-            display: flex; flex-direction: column; gap: 10px;
+            background: #000;
+            padding: 10px 15px 20px 15px;
+            display: flex; flex-direction: column; gap: 8px;
             border-top: 1px solid #333;
         }
 
         #status { 
-            text-align: center; color: #00ffff; font-weight: bold; 
-            font-size: 12px; margin-bottom: 5px;
+            text-align: center; color: #00ffff; font-size: 12px; margin-bottom: 5px; letter-spacing: 1px;
         }
 
         .controls { display: flex; gap: 10px; }
         
         input { 
-            flex: 1; padding: 15px; border-radius: 25px; border: 1px solid #444; 
+            flex: 1; padding: 12px 15px; border-radius: 25px; border: 1px solid #444; 
             background: #222; color: white; font-size: 16px; outline: none; 
         }
         
-        button { border: none; cursor: pointer; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; transition: transform 0.2s; }
+        button { border: none; cursor: pointer; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
         button:active { transform: scale(0.9); }
         #btn-send { background: #00ffff; color: #000; }
         #btn-mic { background: #ff0055; color: #fff; }
@@ -105,13 +103,13 @@
 </head>
 <body>
 
-    <div id="avatar-container">
+    <div id="avatar-section">
         <img src="naia.jpg" id="naia-img" class="idle" onerror="this.src='https://via.placeholder.com/400x600/000000/00FFFF?text=NAIA'">
     </div>
 
-    <div id="chat-window">
+    <div id="chat-container">
         <div class="message ai-msg">
-            Ciao! Sono NAIA, l'assistente dell'Istituto Boccardi-Tiberio. Chiedimi pure informazioni sulla scuola!
+            Ciao! Sono NAIA, l'assistente dell'Istituto Boccardi-Tiberio. Come posso aiutarti oggi?
         </div>
     </div>
 
@@ -119,7 +117,7 @@
         <div id="status">NAIA PRONTA</div>
         <div class="controls">
             <button id="btn-mic" onclick="startDictation()">🎤</button>
-            <input type="text" id="chat-input" placeholder="Scrivi qui la tua domanda..." autocomplete="off">
+            <input type="text" id="chat-input" placeholder="Scrivi una domanda..." autocomplete="off">
             <button id="btn-send" onclick="sendToBrain()">➤</button>
         </div>
     </div>
@@ -134,26 +132,32 @@
 
         const img = document.getElementById('naia-img');
         const statusDiv = document.getElementById('status');
+        const chatContainer = document.getElementById('chat-container');
         const synth = window.speechSynthesis;
 
         let speechQueue = []; 
-
+        
+        // --- FUNZIONE PER SCRIVERE NELLA CHAT ---
+        function appendMessage(text, sender) {
+            const div = document.createElement('div');
+            div.classList.add('message');
+            div.classList.add(sender === 'user' ? 'user-msg' : 'ai-msg');
+            div.innerText = text;
+            chatContainer.appendChild(div);
+            // Scroll automatico verso il basso per leggere l'ultimo messaggio
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
         function speak(text) {
             if (synth.speaking) synth.cancel();
-
             const allVoices = synth.getVoices();
-
             const itVoices = allVoices.filter(v => v.lang.includes("it"));
-        
             const femaleVoice = itVoices.find(v => v.name.includes("Google")) 
                              || itVoices.find(v => v.name.includes("Elsa")) 
                              || itVoices.find(v => v.name.includes("Alice"))
                              || itVoices.find(v => v.name.includes("Federica"))
                              || itVoices[0]; // Se non trova donne, usa la prima italiana che capita
-
             const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
-
-        
             playNextSentence(sentences, 0, femaleVoice);
         }
 
@@ -223,7 +227,7 @@
                     const inputField = document.getElementById('chat-input');
                     const question = inputField.value;
                     if (!question) return;
-        
+                    appendMessage(question, 'user');
                     // ============================================================
                     // IL COPIONE DI NAIA (Modifica qui se vuoi cambiarle carattere)
                     // ============================================================
@@ -387,7 +391,9 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 // 4. Pulizia finale (toglie doppi punti tipo "..")
                 cleanText = cleanText.replace(/\s+/g, " "); // Toglie spazi doppi
                 cleanText = cleanText.replace(/\.\s*\./g, "."); // Toglie ".. "
-            
+
+                // 2. SCRIVO LA RISPOSTA DI NAIA NELLA CHAT (BIANCO)
+                appendMessage(cleanText, 'ai');
                 
                 img.style.filter = "none";
                 speak(cleanText);;
@@ -404,6 +410,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
