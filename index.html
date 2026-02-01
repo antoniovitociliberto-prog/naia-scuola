@@ -440,7 +440,6 @@ Domanda: ${question}`;
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: MODEL_NAME,
-                        prompt: question, 
                         system: SYSTEM_INSTRUCTION,
                         stream: false,
                         keep_alive: -1,
@@ -511,6 +510,7 @@ Domanda: ${question}`;
     </script>
 </body>
 </html>
+
 
 
 
