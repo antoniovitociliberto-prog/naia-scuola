@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA 3D - Versione V3</title>
+    <title>NAIA - Full Prompt V5</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
     <script type="importmap">
@@ -29,11 +29,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* VERSIONE CHECK */
         #version-tag { position: absolute; bottom: 10px; right: 10px; font-size: 10px; color: #999; z-index: 101; }
-
-        /* BOX ERRORI */
-        #debug-console { display: none; margin-top: 20px; padding: 10px; background: #ffe6e6; border: 1px solid red; color: #d8000c; font-family: monospace; font-size: 12px; max-width: 90%; word-break: break-all; border-radius: 8px; }
 
         /* CHAT */
         #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
@@ -60,8 +56,7 @@
         <div id="loading-overlay">
             <div class="loader" id="spinner"></div>
             <div id="load-text">Sto caricando NAIA...</div>
-            <div id="version-tag">V3.0</div>
-            <div id="debug-console"></div>
+            <div id="version-tag">V5.0 (Full Prompt + Carla)</div>
         </div>
         <div id="avatar-container"></div>
     </div>
@@ -70,7 +65,7 @@
 
     <div id="suggestions">
         <div class="chip" onclick="quickAsk('Quali sono gli indirizzi?')">📚 Indirizzi</div>
-        <div class="chip" onclick="quickAsk('Dammi i contatti')">📞 Contatti</div>
+        <div class="chip" onclick="quickAsk('Chi è la preside?')">🎓 Preside</div>
         <div class="chip" onclick="quickAsk('Dove si trova?')">📍 Posizione</div>
     </div>
 
@@ -91,29 +86,17 @@
         const chatContainer = document.getElementById('chat-container');
         const inputField = document.getElementById('chat-input');
         const loadingOverlay = document.getElementById('loading-overlay');
-        const debugConsole = document.getElementById('debug-console');
-        const spinner = document.getElementById('spinner');
-
+        
         let head; 
 
-        // LOG ERRORI
-        window.logError = function(msg) {
-            console.error(msg);
-            spinner.style.display = "none";
-            document.getElementById('load-text').innerText = "Errore:";
-            debugConsole.style.display = "block";
-            debugConsole.innerText = msg;
-        }
-
-        // 1. CARICAMENTO AVATAR
+        // 1. CARICAMENTO AVATAR (NO API KEY)
         async function initAvatar() {
             const nodeAvatar = document.getElementById('avatar-container');
             
             try {
-                // TRUCCO: Inseriamo l'URL vero di Google per ingannare il controllo,
-                // ma NON lo useremo (useremo speakWithFreeVoice)
+                // Impostiamo ttsEndpoint a null, gestiamo l'audio manualmente
                 head = new TalkingHead(nodeAvatar, {
-                    ttsEndpoint: "https://eu-texttospeech.googleapis.com/v1beta1/text:synthesize", 
+                    ttsEndpoint: null, 
                     cameraView: "upper",
                     softShadows: true
                 });
@@ -126,12 +109,12 @@
                 });
                 
                 loadingOverlay.style.display = "none";
-                appendMessage("Ciao! Sono NAIA. Tocca lo schermo o scrivimi per iniziare.", 'ai');
+                appendMessage("Ciao! Sono NAIA. Tocca lo schermo per attivare la mia voce.", 'ai');
 
-                // SBLOCCO AUDIO
+                // SBLOCCO AUDIO UNIVERSALE
                 const unlock = () => {
-                    if (head && head.audioCtx && head.audioCtx.state === 'suspended') {
-                        head.audioCtx.resume();
+                    if (head && head.audioCtx) {
+                        head.audioCtx.resume().then(() => console.log("Audio ON"));
                     }
                     document.body.removeEventListener('click', unlock);
                     document.body.removeEventListener('touchstart', unlock);
@@ -142,33 +125,47 @@
                 document.body.addEventListener('keydown', unlock);
 
             } catch (error) {
-                window.logError(error.message || error);
+                console.error("Init Error:", error);
+                loadingOverlay.style.display = "none";
+                appendMessage("Errore caricamento. Ricarica la pagina.", 'ai');
             }
         }
 
         window.addEventListener('DOMContentLoaded', initAvatar);
 
-        // 2. FUNZIONE VOCE SPECIALE (Genera MP3 esternamente)
-        async function speakWithFreeVoice(text) {
+        // 2. FUNZIONE VOCE FEMMINILE (CARLA) + LIPSYNC
+        async function speakWithFemaleVoice(text) {
             if(!head) return;
             
-            // API Gratuita StreamElements
-            const voiceUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Giorgio&text=${encodeURIComponent(text)}`;
+            // Resume Audio Context
+            if (head.audioCtx.state === 'suspended') {
+                await head.audioCtx.resume();
+            }
+
+            // URL Voce "Carla" (Femminile Italiana)
+            const voiceUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
             
             try {
                 const res = await fetch(voiceUrl);
-                if (!res.ok) throw new Error("Errore voce");
+                if (!res.ok) throw new Error("Errore recupero audio");
+                
                 const blob = await res.arrayBuffer();
                 const audioData = await head.audioCtx.decodeAudioData(blob);
                 
-                // Parla usando il file audio decodificato (NO Google)
+                // LipSync + Audio
                 head.speakAudio(audioData);
 
             } catch (err) {
-                console.warn("Errore voce 3D, uso fallback:", err);
+                console.warn("Fallback su voce browser", err);
                 const utt = new SpeechSynthesisUtterance(text);
                 utt.lang = "it-IT";
+                const voices = window.speechSynthesis.getVoices();
+                // Cerca voce femminile locale
+                const femaleVoice = voices.find(v => v.lang.includes('it') && (v.name.includes('Elsa') || v.name.includes('Alice') || v.name.includes('Google')));
+                if(femaleVoice) utt.voice = femaleVoice;
+                
                 window.speechSynthesis.speak(utt);
+                head.speakText("", { text: text }); // Muove labbra simulato
             }
         }
 
@@ -193,7 +190,7 @@
             recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; };
         };
 
-        // --- CERVELLO (Ollama) ---
+        // --- CERVELLO (Ollama) CON PROMPT COMPLETO ---
         window.sendToBrain = async function() {
             const question = inputField.value.trim();
             if (!question) return;
@@ -205,6 +202,7 @@
 
             if(head) head.stopSpeaking();
 
+            // QUI C'È TUTTO IL TUO PROMPT ORIGINALE
             const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli, DEVI RISPONDERE ESATTAMENTE COSI LA PRIMA VOLTA CHE TI VIENE POSTA UNA DOMANDA.
@@ -308,9 +306,7 @@ Q: C'è il convitto?
 A: Non risulta presente un convitto interno gestito direttamente dalla scuola. Gli studenti fuori sede solitamente si appoggiano a strutture private o convitti convenzionati nella zona di Termoli (verificare disponibilità aggiornata in segreteria)
 Q: Accettate pagamenti in contanti?
 A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono passare obbligatoriamente tramite il sistema PagoPA
-
-
-                
+            
                 Domanda dell'utente: ${question}
             `;
 
@@ -341,12 +337,12 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 cleanText = cleanText.replace(/\n/g, " ");
                 cleanText = cleanText.replace(/\s+/g, " "); 
                 cleanText = cleanText.replace(/\.\s*\./g, "."); 
-                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
+                
 
                 appendMessage(cleanText, 'ai');
                 
-                // PARLA CON IL NUOVO METODO (BYPASS ERRORE)
-                speakWithFreeVoice(cleanText);
+                // PARLA (Voce Carla + LipSync)
+                speakWithFemaleVoice(cleanText);
 
             } catch (error) {
                 console.error(error);
