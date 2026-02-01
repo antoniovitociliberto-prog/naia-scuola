@@ -313,17 +313,19 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, function(match) {
                      return match.replace(/\./g, " punto ");
                 });
-                // 2. Cancella cancelletti, underscore e markdown vari
-                cleanText = cleanText.replace(/[#_`~]/g, "");
-    
-                // 3. Sistema la punteggiatura (A capo -> Punto)
-                cleanText = cleanText.replace(/\n/g, ". ");
-                
-                // 4. Toglie "Sono NAIA"
-                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
+                // 3. GESTIONE A CAPO (LA CORREZIONE CHE CHIEDEVI)
+                // Se c'è un doppio "a capo" (\n\n), diventa un punto.
+                cleanText = cleanText.replace(/\n\n/g, ". ");
+                // Se c'è un singolo "a capo" (\n), diventa uno SPAZIO (non un punto!).
+                cleanText = cleanText.replace(/\n/g, " ");
+
+                // 4. Pulizia finale (toglie doppi punti tipo "..")
+                cleanText = cleanText.replace(/\s+/g, " "); // Toglie spazi doppi
+                cleanText = cleanText.replace(/\.\s*\./g, "."); // Toglie ".. "
+                cleanText = cleanText.replace(/Sono NAIA,?/gi, ""); // Toglie "Sono NAIA" ripetitivo
                 
                 img.style.filter = "none";
-                speak(cleanText);
+                speak(cleanText);;
 
             } catch (error) {
                 console.error(error);
@@ -337,6 +339,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 </body>
 
 </html>
+
 
 
 
