@@ -350,6 +350,7 @@ via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86039 Termoli
 pec (Posta Certificata) CBIS01800L@pec.istruzione.it
 email Istituzionale CBIS01800L@istruzione.it
 sito Web www.iisboccarditiberio.edu.it
+telefono segreteria 0 8 7 5 8 3 6 5 5
 2. STORIA E IDENTITÀ
 l'istituto nasce dalla fusione di due storiche scuole di Termoli
 l'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959)
@@ -448,24 +449,49 @@ Domanda: ${question}`;
                 const data = await response.json();
                 let cleanText = data.response;
 
-                // PULIZIA AVANZATA
-                cleanText = cleanText.replace(/\*/g, ""); // Via markdown
-                
-                // 1. Gestione Email/Siti (Punti -> Parole)
-                cleanText = cleanText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => {
+                // --- PULIZIA TESTO INTELLIGENTE ---
+                let cleanText = data.response;
+
+                // 1. Rimuove Markdown (* e #)
+                cleanText = cleanText.replace(/[*#]/g, "");
+
+                // 2. Converte i "nuova riga" in spazi (NON in punti, per evitare doppi punti)
+                // Se c'è un doppio a capo, mettiamo un punto. Se c'è un a capo singolo, solo spazio.
+                cleanText = cleanText.replace(/\n\n/g, ". "); 
+                cleanText = cleanText.replace(/\n/g, " ");
+
+                // 3. Gestione Email e Siti (Punti -> Parole per il parlato)
+                // Solo per l'audio (creiamo una variabile separata per il parlato)
+                let audioText = cleanText;
+
+                audioText = audioText.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => {
                     return m.replace(/@/g, " chiocciola ").replace(/\./g, " punto ");
                 });
-                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => {
+                audioText = audioText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => {
                      return m.replace(/\./g, " punto ");
                 });
 
-                // 2. Gestione testo normale (Punti -> Pause silenziose)
-                // Non serve fare nulla, il TTS gestisce il "." come pausa automaticamente
-                // Rimuoviamo solo eventuali "Sono NAIA" ripetuti se fastidiosi
-                cleanText = cleanText.replace(/Sono NAIA,?/gi, "");
+                // 4. FIX PUNTEGGIATURA (Il cuore della correzione)
+                // Rimuove spazi doppi creati dalla pulizia
+                cleanText = cleanText.replace(/\s+/g, " "); 
+                audioText = audioText.replace(/\s+/g, " ");
+                
+                // Rimuove pattern come ". ." oppure ".." oppure ". ."
+                cleanText = cleanText.replace(/\.\s*\./g, ".");
+                audioText = audioText.replace(/\.\s*\./g, ".");
 
-                appendMessage(data.response.replace(/\*/g, ""), 'ai'); // A video mostriamo il testo pulito ma leggibile
-                speak(cleanText); // All'audio mandiamo il testo ottimizzato
+                // Rimuove punto se c'è già un ! o ? (Es: "Ciao!. Come stai" -> "Ciao! Come stai")
+                cleanText = cleanText.replace(/([?!])\s*\./g, "$1");
+                audioText = audioText.replace(/([?!])\s*\./g, "$1");
+
+                // Rimuove eventuali punti all'inizio della frase
+                cleanText = cleanText.replace(/^\.\s*/, "");
+                audioText = audioText.replace(/^\.\s*/, "");
+
+                // --- FINE PULIZIA ---
+
+                appendMessage(cleanText, 'ai'); // A video testo normale
+                speak(audioText); // All'audio testo con "chiocciola" e "punto"
 
             } catch (error) {
                 console.error(error);
@@ -479,3 +505,4 @@ Domanda: ${question}`;
     </script>
 </body>
 </html>
+
