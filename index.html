@@ -1,20 +1,3 @@
-Capisco, è molto probabile che il browser stia bloccando il file dell'animazione esterna per motivi di sicurezza (CORS), lasciando l'avatar "congelato" nella posa statica.
-
-Se il caricamento del file di animazione 3D fallisce, dobbiamo usare la "Forza Bruta": invece di aspettare che lo scheletro 3D si muova, muoveremo noi l'intero avatar usando i CSS e la telecamera. È un trucco visivo infallibile: sembrerà che respiri anche se il modello 3D è tecnicamente fermo.
-
-Ecco il codice definitivo "Anti-Blocco".
-
-Cosa ho cambiato per GARANTIRE il movimento:
-
-Animazione CSS breathe-css: Ho applicato un'espansione e contrazione ritmica direttamente al tag <model-viewer>. Questo simula il torace che si alza e abbassa (funziona al 100% perché è HTML/CSS puro, non 3D).
-
-Script forceLife(): Uno script JavaScript che muove la telecamera su e giù in loop continuo. Questo crea l'illusione che l'avatar stia ondeggiando leggermente, rendendolo vivo.
-
-Posa "A": Ho mantenuto ?pose=A per avere le braccia giù.
-
-Copia e incolla tutto questo codice. Vedrai che ora si muoverà.
-
-HTML
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -432,6 +415,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
