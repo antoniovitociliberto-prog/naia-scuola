@@ -182,7 +182,20 @@
 
         let voices = [];
         let bestVoice = null;
-
+        // --- FORZATURA MOVIMENTO ---
+        // Se l'animazione GLB fallisce, questo script muove la camera per simulare il respiro
+        let time = 0;
+        function animateCamera() {
+            time += 0.03;
+            // Oscillazione leggera verticale (simula respiro)
+            const lift = Math.sin(time) * 0.05; 
+            // Aggiorna il target della camera (muove lo sguardo su e giù leggermente)
+            // Mantiene il focus sul viso (1.58m) ma oscilla di poco
+            img.cameraTarget = `0m ${1.58 + lift * 0.5}m 0m`;
+            requestAnimationFrame(animateCamera);
+        }
+        // Avvia animazione camera manuale
+        animateCamera();
         // Qui ora "img" si riferisce al tag <model-viewer> grazie all'ID uguale
         const img = document.getElementById('naia-img');
         const statusDiv = document.getElementById('status');
@@ -446,6 +459,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
