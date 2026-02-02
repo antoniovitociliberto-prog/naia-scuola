@@ -1,15 +1,3 @@
-Hai perfettamente ragione, e so esattamente perché è successo.
-
-Il motivo è tecnico: il link che abbiamo usato (models.readyplayer.me/...) è un file statico (già "cotto"), quindi il server ignora la richiesta ?pose=A e ti ridà sempre il file originale con le braccia a T.
-
-La Soluzione:
-Dobbiamo cambiare l'indirizzo da models a api. Questo costringe il server di Ready Player Me a rigenerare il modello al volo applicando la posa corretta (braccia lungo i fianchi).
-
-Inoltre, per sicurezza, ho aggiunto un piccolo trucco (&v=2) per costringere il browser a scaricare la nuova versione e non usare quella vecchia salvata in memoria.
-
-Ecco il codice corretto. Sostituiscilo tutto e vedrai l'avatar con le braccia giù in posizione naturale.
-
-HTML
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -496,6 +484,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
