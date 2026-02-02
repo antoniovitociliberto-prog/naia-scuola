@@ -2,38 +2,54 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NAIA 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NAIA</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
+* { box-sizing: border-box; }
+
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
-    background: #f4f7f6;
+    background-color: #f4f7f6;
+    height: 100vh;
+    width: 100vw;
     overflow: hidden;
 }
 
 #app-frame {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
     display: flex;
     flex-direction: column;
-    height: 100vh;
 }
 
 header {
     background: white;
-    padding: 10px 20px;
+    padding: 15px 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     z-index: 10;
 }
 
-h1 {
+#avatar3d {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header-text h1 {
     margin: 0;
     font-size: 18px;
+    color: #333;
 }
 
 #status {
@@ -42,57 +58,55 @@ h1 {
     text-transform: uppercase;
 }
 
-#scene-container {
-    flex: 1;
-    background: radial-gradient(circle at top, #ffffff, #e5e7eb);
-}
-
 #chat-container {
+    flex: 1;
     padding: 15px;
-    height: 30vh;
     overflow-y: auto;
-    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .message {
-    max-width: 800px;
-    margin-bottom: 10px;
-    padding: 12px 18px;
-    border-radius: 16px;
-    font-size: 15px;
+    max-width: 700px;
+    padding: 15px 25px;
+    border-radius: 20px;
+    font-size: 16px;
 }
 
 .ai-msg {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: white;
+    border: 1px solid #e0e0e0;
+    align-self: flex-start;
 }
 
 .user-msg {
     background: #2563eb;
     color: white;
-    margin-left: auto;
+    align-self: flex-end;
 }
 
 #input-zone {
-    display: flex;
     padding: 10px;
     background: white;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #eaeaea;
+    display: flex;
+    gap: 10px;
 }
 
 #chat-input {
     flex: 1;
+    padding: 16px 22px;
     border-radius: 30px;
-    padding: 14px 20px;
     border: none;
     background: #f3f4f6;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 #btn-send {
-    margin-left: 10px;
-    border-radius: 50%;
     width: 50px;
+    height: 50px;
+    border-radius: 50%;
     border: none;
     background: #2563eb;
     color: white;
@@ -105,154 +119,114 @@ h1 {
 <body>
 
 <div id="app-frame">
-<header>
-    <h1>NAIA – School Assistant</h1>
-    <div id="status">IN ASCOLTO</div>
-</header>
 
-<div id="scene-container"></div>
+<header>
+    <div id="avatar3d"></div>
+    <div class="header-text">
+        <h1>NAIA School Assistant</h1>
+        <div id="status">IN ASCOLTO</div>
+    </div>
+</header>
 
 <div id="chat-container">
     <div class="message ai-msg">
-        Ciao! Sono NAIA. Sono qui per darti informazioni sull’Istituto Boccardi-Tiberio.
+        Ciao! Sono NAIA. Sono qui per darti tutte le informazioni sull'Istituto Boccardi-Tiberio.
     </div>
 </div>
 
 <div id="input-zone">
-    <input id="chat-input" placeholder="Scrivi un messaggio a NAIA…">
+    <input type="text" id="chat-input" placeholder="Scrivi un messaggio a NAIA..." autocomplete="off">
     <button id="btn-send" onclick="sendToBrain()">➤</button>
 </div>
+
 </div>
 
 <!-- THREE.JS -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.158/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.158/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
-/* ===============================
-   SCENA 3D – AVATAR PROTAGONISTA
-================================ */
+/* =========================
+   AVATAR 3D (SOLO VISIVO)
+========================= */
 
-let scene, camera, renderer, avatar, mouthMesh;
+(() => {
+    const container = document.getElementById("avatar3d");
 
-const container = document.getElementById("scene-container");
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+    camera.position.set(0, 1.6, 2.2);
 
-scene = new THREE.Scene();
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(60, 60);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
 
-camera = new THREE.PerspectiveCamera(
-    35,
-    container.clientWidth / container.clientHeight,
-    0.1,
-    100
-);
-camera.position.set(0, 1.6, 2.5);
+    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+    scene.add(light);
 
-renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-container.appendChild(renderer.domElement);
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+        "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb",
+        gltf => {
+            const avatar = gltf.scene;
+            avatar.scale.set(1,1,1);
+            avatar.rotation.y = Math.PI;
+            scene.add(avatar);
+        },
+        undefined,
+        error => console.error("Errore caricamento avatar:", error)
+    );
 
-const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-scene.add(light);
-
-const loader = new THREE.GLTFLoader();
-loader.load(
-    "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb",
-    gltf => {
-        avatar = gltf.scene;
-        avatar.scale.set(1,1,1);
-        scene.add(avatar);
-
-        avatar.traverse(obj => {
-            if (obj.morphTargetDictionary && obj.morphTargetDictionary["mouthOpen"]) {
-                mouthMesh = obj;
-            }
-        });
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
     }
-);
+    animate();
+})();
+</script>
 
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
-animate();
+<script>
+/* =========================
+   CODICE ORIGINALE NAIA
+   (INTOCCATO)
+========================= */
 
-window.addEventListener("resize", () => {
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
-});
-
-/* ===============================
-   CHAT + OLLAMA (CERVELLO INALTERATO)
-================================ */
-
-const OLLAMA_HOST = "https://kandra-superpious-kanesha.ngrok-free.dev";
+const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev';
 const MODEL_NAME = "naia_school";
+
+const statusDiv = document.getElementById('status');
+const chatContainer = document.getElementById('chat-container');
 const synth = window.speechSynthesis;
-const statusDiv = document.getElementById("status");
-const chatContainer = document.getElementById("chat-container");
 
 function appendMessage(text, sender) {
-    const div = document.createElement("div");
-    div.className = "message " + (sender === "user" ? "user-msg" : "ai-msg");
+    const div = document.createElement('div');
+    div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
     div.innerText = text;
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-/* ===============================
-   SPEECH + LIPSYNC
-================================ */
-
 function speak(text) {
     if (synth.speaking) synth.cancel();
-
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "it-IT";
-    utter.rate = 0.9;
-
-    utter.onstart = () => {
-        statusDiv.innerText = "NAIA PARLA...";
-        startLipSync();
-    };
-
-    utter.onend = () => {
-        statusDiv.innerText = "IN ASCOLTO";
-        stopLipSync();
-    };
-
-    synth.speak(utter);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'it-IT';
+    utterance.rate = 0.9;
+    utterance.onstart = () => statusDiv.innerText = "NAIA PARLA...";
+    utterance.onend = () => statusDiv.innerText = "IN ASCOLTO";
+    synth.speak(utterance);
 }
-
-let lipInterval = null;
-
-function startLipSync() {
-    if (!mouthMesh) return;
-    lipInterval = setInterval(() => {
-        mouthMesh.morphTargetInfluences[0] = Math.random() * 0.6;
-    }, 80);
-}
-
-function stopLipSync() {
-    if (lipInterval) clearInterval(lipInterval);
-    if (mouthMesh) mouthMesh.morphTargetInfluences[0] = 0;
-}
-
-/* ===============================
-   INVIO A OLLAMA
-================================ */
 
 async function sendToBrain() {
-    const input = document.getElementById("chat-input");
-    const question = input.value.trim();
+    const inputField = document.getElementById('chat-input');
+    const question = inputField.value.trim();
     if (!question) return;
 
-    appendMessage(question, "user");
-    input.value = "";
+    appendMessage(question, 'user');
+    inputField.value = "";
     statusDiv.innerText = "ELABORAZIONE...";
 
-    const SYSTEM_INSTRUCTION = `   
+    const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
@@ -318,8 +292,8 @@ Domanda dell'utente: ${question}
 
     try {
         const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: MODEL_NAME,
                 prompt: question,
@@ -329,14 +303,15 @@ Domanda dell'utente: ${question}
         });
 
         const data = await response.json();
-        const text = data.response.replace(/\*/g, "").replace(/\n+/g, " ");
+        const cleanText = data.response.replace(/\*/g, "").replace(/\n+/g, " ");
 
-        appendMessage(text, "ai");
-        speak(text);
+        appendMessage(cleanText, 'ai');
+        speak(cleanText);
 
     } catch (e) {
-        statusDiv.innerText = "ERRORE";
         console.error(e);
+        statusDiv.innerText = "ERRORE";
+        alert("Errore di rete / Ollama");
     }
 }
 
@@ -348,6 +323,7 @@ document.getElementById("chat-input")
 
 </body>
 </html>
+ 
 
 
 
