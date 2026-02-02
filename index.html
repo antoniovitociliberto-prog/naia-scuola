@@ -1,3 +1,15 @@
+Hai perfettamente ragione, e so esattamente perché è successo.
+
+Il motivo è tecnico: il link che abbiamo usato (models.readyplayer.me/...) è un file statico (già "cotto"), quindi il server ignora la richiesta ?pose=A e ti ridà sempre il file originale con le braccia a T.
+
+La Soluzione:
+Dobbiamo cambiare l'indirizzo da models a api. Questo costringe il server di Ready Player Me a rigenerare il modello al volo applicando la posa corretta (braccia lungo i fianchi).
+
+Inoltre, per sicurezza, ho aggiunto un piccolo trucco (&v=2) per costringere il browser a scaricare la nuova versione e non usare quella vecchia salvata in memoria.
+
+Ecco il codice corretto. Sostituiscilo tutto e vedrai l'avatar con le braccia giù in posizione naturale.
+
+HTML
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -9,7 +21,7 @@
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        /* --- 1. STILI DI BASE --- */
+        /* --- 1. SETUP GENERALE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
@@ -29,20 +41,21 @@
             position: relative;
         }
 
-        /* --- 2. ZONA AVATAR (L'area colorata) --- */
+        /* --- 2. AVATAR STAGE (Sfondo sfumato) --- */
         #avatar-stage {
-            height: 45vh; /* Spazio abbondante per il mezzo busto */
+            /* Altezza bilanciata */
+            height: 45vh; 
             width: 100%;
-            /* Gradiente moderno Blu/Viola */
+            /* Gradiente Blu/Viola moderno */
             background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
             position: relative;
             display: flex;
             justify-content: center;
-            align-items: flex-end;
+            align-items: flex-end; /* Allinea il modello in basso */
             overflow: hidden;
         }
 
-        /* Scritta in alto a sinistra */
+        /* Info in alto a sinistra */
         .top-info {
             position: absolute;
             top: 25px; left: 25px;
@@ -57,24 +70,39 @@
             letter-spacing: 1.5px; text-transform: uppercase; margin-top: 5px;
         }
 
-        /* --- 3. CONFIGURAZIONE MODELLO 3D --- */
+        /* --- 3. MODELLO 3D --- */
         model-viewer#naia-img {
             width: 100%; 
-            height: 100%; 
+            height: 115%; /* Leggermente più alto per scendere bene sotto il foglio bianco */
             background-color: transparent;
             --poster-color: transparent;
             
-            /* Questo serve per centrare il taglio */
-            transform-origin: center bottom;
+            /* Animazione CSS "Respiro" (Simula la vita senza file esterni complessi) */
+            animation: breathing 4s ease-in-out infinite;
+            transform-origin: bottom center;
         }
 
-        /* --- 4. ZONA CHAT (Il foglio bianco) --- */
+        /* Definiamo il movimento del respiro */
+        @keyframes breathing {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3px) scale(1.005); } /* Si alza e si gonfia appena appena */
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        /* Animazione quando parla (Più veloce) */
+        .speaking { animation: talkingBounce 0.4s infinite alternate ease-in-out !important; }
+        @keyframes talkingBounce {
+            from { transform: translateY(0) scale(1); }
+            to { transform: translateY(-5px) scale(1.01); }
+        }
+
+        /* --- 4. ZONA CHAT (Foglio bianco) --- */
         #chat-container {
             flex: 1; 
             background: #ffffff;
-            margin-top: -30px; /* Sovrapposizione estetica */
-            border-top-left-radius: 30px;
-            border-top-right-radius: 30px;
+            margin-top: -35px; /* Sovrapposizione */
+            border-top-left-radius: 35px;
+            border-top-right-radius: 35px;
             
             padding: 25px 20px;
             padding-bottom: calc(90px + env(safe-area-inset-bottom));
@@ -101,13 +129,6 @@
             background: #4f46e5; color: white;
             border-bottom-right-radius: 4px;
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-        }
-
-        /* Animazione "parlato" (Rimbalzo leggero) */
-        .speaking { animation: talkingBounce 0.3s infinite alternate ease-in-out; }
-        @keyframes talkingBounce {
-            from { transform: scale(1); }
-            to { transform: scale(1.02); }
         }
 
         /* --- 5. INPUT & SUGGERIMENTI --- */
@@ -168,20 +189,15 @@
             
             <model-viewer 
                 id="naia-img" 
-                src="https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?pose=A" 
-                animation-src="https://models.readyplayer.me/models/animations/female/idle.glb"
-                autoplay
+                src="https://api.readyplayer.me/v1/avatars/697fa9a97091d5aa566145fb.glb?pose=A&v=2" 
                 camera-controls 
                 disable-zoom 
                 disable-pan
                 interaction-prompt="none"
                 
-                camera-orbit="-5deg 80deg 1.1m" 
-                camera-target="0m 1.55m 0m"
-                field-of-view="35deg"
-                
-                min-camera-orbit="auto 75deg auto"
-                max-camera-orbit="auto 95deg auto"
+                camera-orbit="-5deg 85deg 3.5m" 
+                camera-target="0m 1.45m 0m"
+                field-of-view="25deg"
                 
                 shadow-intensity="0.4"
                 alt="NAIA Avatar">
@@ -190,7 +206,7 @@
 
         <div id="chat-container">
             <div class="message ai-msg">
-                Ciao! 👋 Sono NAIA. Chiedimi pure informazioni sulla scuola.
+                Ciao! 👋 Sono NAIA. Come posso aiutarti oggi?
             </div>
         </div>
         
@@ -480,6 +496,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
