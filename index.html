@@ -8,13 +8,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
     background-color: #f4f7f6;
-    height: 100vh;
+    height: 100dvh;
     width: 100vw;
     overflow: hidden;
 }
@@ -22,14 +22,14 @@ body {
 #app-frame {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
     display: flex;
     flex-direction: column;
 }
 
+/* HEADER */
 header {
     background: white;
-    padding: 15px 20px;
+    padding: 10px 20px;
     display: flex;
     align-items: center;
     gap: 15px;
@@ -37,19 +37,9 @@ header {
     z-index: 10;
 }
 
-#avatar3d {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: #fff;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.header-text h1 {
+h1 {
     margin: 0;
     font-size: 18px;
-    color: #333;
 }
 
 #status {
@@ -58,6 +48,13 @@ header {
     text-transform: uppercase;
 }
 
+/* AVATAR 3D */
+#avatar-zone {
+    height: 35vh;
+    background: radial-gradient(circle at top, #ffffff, #e5e7eb);
+}
+
+/* CHAT */
 #chat-container {
     flex: 1;
     padding: 15px;
@@ -86,32 +83,48 @@ header {
     align-self: flex-end;
 }
 
+/* INPUT */
 #input-zone {
     padding: 10px;
     background: white;
     border-top: 1px solid #eaeaea;
     display: flex;
+    align-items: center;
     gap: 10px;
 }
 
 #chat-input {
     flex: 1;
+    background: #f3f4f6;
+    border: none;
     padding: 16px 22px;
     border-radius: 30px;
-    border: none;
-    background: #f3f4f6;
     font-size: 16px;
+    outline: none;
 }
 
-#btn-send {
+.icon-btn {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     border: none;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+#btn-mic {
+    background: white;
+    border: 1px solid #ddd;
+}
+
+.mic-active {
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+#btn-send {
     background: #2563eb;
     color: white;
-    font-size: 18px;
-    cursor: pointer;
 }
 </style>
 </head>
@@ -121,12 +134,13 @@ header {
 <div id="app-frame">
 
 <header>
-    <div id="avatar3d"></div>
-    <div class="header-text">
+    <div>
         <h1>NAIA School Assistant</h1>
         <div id="status">IN ASCOLTO</div>
     </div>
 </header>
+
+<div id="avatar-zone"></div>
 
 <div id="chat-container">
     <div class="message ai-msg">
@@ -135,62 +149,53 @@ header {
 </div>
 
 <div id="input-zone">
-    <input type="text" id="chat-input" placeholder="Scrivi un messaggio a NAIA..." autocomplete="off">
-    <button id="btn-send" onclick="sendToBrain()">➤</button>
+    <button id="btn-mic" class="icon-btn" onclick="startDictation()">🎙️</button>
+    <input id="chat-input" placeholder="Scrivi un messaggio a NAIA..." autocomplete="off">
+    <button id="btn-send" class="icon-btn" onclick="sendToBrain()">➤</button>
 </div>
 
 </div>
 
-<!-- THREE.JS -->
+<!-- THREE -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
-/* =========================
-   AVATAR 3D (SOLO VISIVO)
-========================= */
+/* AVATAR 3D VISIBILE */
+const container = document.getElementById("avatar-zone");
 
-(() => {
-    const container = document.getElementById("avatar3d");
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 100);
+camera.position.set(0, 1.6, 2.5);
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-    camera.position.set(0, 1.6, 2.2);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+container.appendChild(renderer.domElement);
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(60, 60);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.3));
 
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-    scene.add(light);
+const loader = new THREE.GLTFLoader();
+loader.load(
+    "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb",
+    gltf => {
+        const avatar = gltf.scene;
+        avatar.rotation.y = Math.PI;
+        scene.add(avatar);
+    },
+    undefined,
+    err => console.error("Avatar error:", err)
+);
 
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-        "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb",
-        gltf => {
-            const avatar = gltf.scene;
-            avatar.scale.set(1,1,1);
-            avatar.rotation.y = Math.PI;
-            scene.add(avatar);
-        },
-        undefined,
-        error => console.error("Errore caricamento avatar:", error)
-    );
-
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-    }
-    animate();
-})();
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+animate();
 </script>
 
 <script>
-/* =========================
-   CODICE ORIGINALE NAIA
-   (INTOCCATO)
-========================= */
+/* ===== CODICE ORIGINALE NAIA (RIPRISTINATO) ===== */
 
 const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev';
 const MODEL_NAME = "naia_school";
@@ -199,6 +204,7 @@ const statusDiv = document.getElementById('status');
 const chatContainer = document.getElementById('chat-container');
 const synth = window.speechSynthesis;
 
+/* CHAT */
 function appendMessage(text, sender) {
     const div = document.createElement('div');
     div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
@@ -207,26 +213,62 @@ function appendMessage(text, sender) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+/* VOCE FEMMINILE (COME PRIMA) */
 function speak(text) {
     if (synth.speaking) synth.cancel();
+
+    const allVoices = synth.getVoices();
+    const itVoices = allVoices.filter(v => v.lang.includes("it"));
+    const femaleVoice =
+        itVoices.find(v => v.name.includes("Google")) ||
+        itVoices.find(v => v.name.includes("Elsa")) ||
+        itVoices.find(v => v.name.includes("Alice")) ||
+        itVoices.find(v => v.name.includes("Federica")) ||
+        itVoices[0];
+
     const utterance = new SpeechSynthesisUtterance(text);
+    if (femaleVoice) utterance.voice = femaleVoice;
     utterance.lang = 'it-IT';
     utterance.rate = 0.9;
+
     utterance.onstart = () => statusDiv.innerText = "NAIA PARLA...";
     utterance.onend = () => statusDiv.innerText = "IN ASCOLTO";
+
     synth.speak(utterance);
 }
 
+/* MICROFONO */
+function startDictation() {
+    const btnMic = document.getElementById('btn-mic');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert("Usa Chrome o Safari");
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'it-IT';
+
+    recognition.onstart = () => btnMic.classList.add("mic-active");
+    recognition.onend = () => btnMic.classList.remove("mic-active");
+    recognition.onresult = e => {
+        document.getElementById('chat-input').value = e.results[0][0].transcript;
+        sendToBrain();
+    };
+
+    recognition.start();
+}
+
+/* INVIO */
 async function sendToBrain() {
-    const inputField = document.getElementById('chat-input');
-    const question = inputField.value.trim();
+    const input = document.getElementById('chat-input');
+    const question = input.value.trim();
     if (!question) return;
 
     appendMessage(question, 'user');
-    inputField.value = "";
+    input.value = "";
     statusDiv.innerText = "ELABORAZIONE...";
 
+    /* ⚠️ QUI RESTA IL TUO SYSTEM PROMPT COMPLETO */
     const SYSTEM_INSTRUCTION = `
+    
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
@@ -304,26 +346,21 @@ Domanda dell'utente: ${question}
 
         const data = await response.json();
         const cleanText = data.response.replace(/\*/g, "").replace(/\n+/g, " ");
-
         appendMessage(cleanText, 'ai');
         speak(cleanText);
 
     } catch (e) {
         console.error(e);
         statusDiv.innerText = "ERRORE";
-        alert("Errore di rete / Ollama");
+        alert("Errore di rete");
     }
 }
 
-document.getElementById("chat-input")
-.addEventListener("keypress", e => {
+document.getElementById("chat-input").addEventListener("keypress", e => {
     if (e.key === "Enter") sendToBrain();
 });
 </script>
 
 </body>
 </html>
- 
-
-
 
