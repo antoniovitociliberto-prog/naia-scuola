@@ -138,20 +138,29 @@
 
         let voices = [];
         let bestVoice = null;
-        // --- FORZATURA MOVIMENTO ---
-        // Se l'animazione GLB fallisce, questo script muove la camera per simulare il respiro
+
+        // --- SCRIPT PER DARE VITA (Movimento Camera) ---
+        // Se il CSS fa il "respiro", questo script fa oscillare la testa leggermente
+        // creando un effetto 3D realistico senza bisogno di file di animazione.
         let time = 0;
-        function animateCamera() {
-            time += 0.03;
-            // Oscillazione leggera verticale (simula respiro)
-            const lift = Math.sin(time) * 0.05; 
-            // Aggiorna il target della camera (muove lo sguardo su e giù leggermente)
-            // Mantiene il focus sul viso (1.58m) ma oscilla di poco
-            img.cameraTarget = `0m ${1.58 + lift * 0.5}m 0m`;
-            requestAnimationFrame(animateCamera);
+        function forceLife() {
+            time += 0.02;
+            // Oscilla verticalmente (Y) e orizzontalmente (theta) molto piano
+            const headBob = Math.sin(time) * 0.03; 
+            const headTurn = Math.cos(time * 0.5) * 2; // +/- 2 gradi rotazione
+
+            // Aggiorna target camera (Sguardo)
+            img.cameraTarget = `0m ${1.55 + headBob}m 0m`;
+            
+            // Aggiorna orbita (Rotazione leggera)
+            // Mantiene l'angolo verticale fisso a 85deg, raggio 3.5m
+            img.cameraOrbit = `${-5 + headTurn}deg 85deg 3.5m`;
+
+            requestAnimationFrame(forceLife);
         }
-        // Avvia animazione camera manuale
-        animateCamera();
+        // AVVIA IL MOVIMENTO FORZATO
+        forceLife();
+        
         // Qui ora "img" si riferisce al tag <model-viewer> grazie all'ID uguale
         const img = document.getElementById('naia-img');
         const statusDiv = document.getElementById('status');
@@ -415,6 +424,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
