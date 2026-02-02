@@ -1,196 +1,285 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA 3D - Ultimate Fix</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
-            "talkinghead": "https://cdn.jsdelivr.net/gh/met4citizen/TalkingHead@1.1/modules/talkinghead.mjs"
-        }
-    }
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NAIA</title>
 
-    <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; padding: 0; font-family: 'Poppins', sans-serif; background-color: #f4f7f6; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
-        /* ZONA 3D (Alto) */
-        #avatar-view { width: 100%; height: 45vh; position: relative; background: radial-gradient(circle, #f0f0f0 0%, #ffffff 100%); border-bottom: 1px solid #ccc; z-index: 1; }
-        #avatar-container { width: 100%; height: 100%; display: block; }
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
 
-        /* LOADING SCREEN */
-        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #start-btn { display: none; padding: 12px 25px; background: #2563eb; color: white; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; margin-top: 15px; font-size: 16px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+<style>
+* { box-sizing: border-box; }
 
-        /* CHAT (Centro) */
-        #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: #fff; }
-        .message { max-width: 85%; padding: 14px 20px; border-radius: 20px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .ai-msg { align-self: flex-start; background: #f0f2f5; color: #333; border-bottom-left-radius: 4px; border: 1px solid #e0e0e0; }
-        .user-msg { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 4px; }
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #000;
+    overflow: hidden;
+}
 
-        /* INPUT (Basso) */
-        #input-zone { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
-        #chat-input { flex: 1; background: #f3f4f6; border: none; padding: 15px 20px; border-radius: 30px; font-size: 16px; outline: none; }
-        .icon-btn { width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; background: white; border: 1px solid #ddd; color: #555; transition: 0.2s; }
-        #btn-send { background: #2563eb; color: white; border: none; }
-        .mic-active { color: #ef4444; border-color: #ef4444; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        
-        #suggestions { padding: 10px 15px; display: flex; gap: 10px; overflow-x: auto; background: #fafafa; border-top: 1px solid #eee; }
-        .chip { background: white; border: 1px solid #2563eb; color: #2563eb; padding: 6px 15px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; }
-    </style>
+/* AVATAR PROTAGONISTA */
+#avatar-stage {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at top, #eef2ff, #dbeafe);
+    z-index: 0;
+}
+
+#avatar-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#avatar-status {
+    position: absolute;
+    bottom: 150px;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: #2563eb;
+    text-transform: uppercase;
+}
+
+/* CHAT OVERLAY */
+#chat-container {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 900px;
+    max-height: 40%;
+    overflow-y: auto;
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 20px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    padding: 14px 20px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 80%;
+}
+
+.ai-msg {
+    background: white;
+    color: #333;
+    align-self: flex-start;
+}
+
+.user-msg {
+    background: #2563eb;
+    color: white;
+    align-self: flex-end;
+}
+
+/* INPUT */
+#input-zone {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    padding: 10px;
+    z-index: 20;
+}
+
+.input-wrapper {
+    max-width: 900px;
+    margin: auto;
+    display: flex;
+    gap: 10px;
+}
+
+#chat-input {
+    flex: 1;
+    padding: 15px 20px;
+    border-radius: 30px;
+    border: none;
+    background: #f3f4f6;
+    font-size: 15px;
+    outline: none;
+}
+
+.icon-btn {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+#btn-mic { background: white; border: 1px solid #ddd; }
+#btn-send { background: #2563eb; color: white; transform: rotate(-45deg); }
+.mic-active { color: red; }
+</style>
 </head>
+
 <body>
 
-    <div id="avatar-view">
-        <div id="loading-overlay">
-            <div class="loader" id="spinner"></div>
-            <div id="load-text">Caricamento NAIA 3D...</div>
-            <button id="start-btn" onclick="startExperience()">AVVIA ESPERIENZA</button>
-        </div>
-        <div id="avatar-container"></div>
+<div id="avatar-stage">
+    <canvas id="avatar-canvas"></canvas>
+    <div id="avatar-status">IN ASCOLTO</div>
+</div>
+
+<div id="chat-container">
+    <div class="message ai-msg">
+        Ciao! 👋 Sono NAIA. Sono qui per darti tutte le informazioni sull'Istituto Boccardi-Tiberio. Dimmi pure!
     </div>
+</div>
 
-    <div id="chat-container"></div>
-
-    <div id="suggestions">
-        <div class="chip" onclick="quickAsk('Quali sono gli indirizzi?')">📚 Indirizzi</div>
-        <div class="chip" onclick="quickAsk('Chi è la preside?')">🎓 Preside</div>
-        <div class="chip" onclick="quickAsk('Dove si trova?')">📍 Posizione</div>
-        <div class="chip" onclick="quickAsk('Orari segreteria')">🕒 Orari</div>
-    </div>
-
-    <div id="input-zone">
+<div id="input-zone">
+    <div class="input-wrapper">
         <button id="btn-mic" class="icon-btn" onclick="startDictation()">🎙️</button>
-        <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
+        <input id="chat-input" placeholder="Parla con NAIA..." autocomplete="off">
         <button id="btn-send" class="icon-btn" onclick="sendToBrain()">➤</button>
     </div>
+</div>
 
-    <script type="module">
-        import { TalkingHead } from "talkinghead";
+<script>
+/* ===================== AVATAR 3D ===================== */
+let scene, camera, renderer, avatar, mouthMesh;
+let lipSyncInterval = null;
 
-        // --- CONFIGURAZIONE ---
-        const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
-        const MODEL_NAME = "naia_school"; 
-        const AVATAR_URL = "https://models.readyplayer.me/64b7c8526563603403323565.glb?morphTargets=ARKit&textureAtlas=1024";
+function initAvatar() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.6, 1.8);
 
-        const chatContainer = document.getElementById('chat-container');
-        const inputField = document.getElementById('chat-input');
-        const loadOverlay = document.getElementById('loading-overlay');
-        const startBtn = document.getElementById('start-btn');
-        const spinner = document.getElementById('spinner');
-        const loadText = document.getElementById('load-text');
+    renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById('avatar-canvas'),
+        alpha: true,
+        antialias: true
+    });
 
-        let head; // L'oggetto Avatar
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 
-        // --- 1. SOLUZIONE ERRORE ROSSO (TTS Custom) ---
-        // Questa funzione intercetta la richiesta di voce e usa StreamElements invece di Google.
-        async function customTTS(text) {
-            console.log("Generazione audio per:", text);
-            try {
-                // Voce "Carla" (Italiano)
-                const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("Errore TTS Esterno");
-                const blob = await res.blob();
-                return await blob.arrayBuffer();
-            } catch (err) {
-                console.error("Errore TTS:", err);
-                // Se fallisce, restituisce un buffer vuoto per non bloccare l'avatar
-                return new ArrayBuffer(0);
-            }
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const light = new THREE.DirectionalLight(0xffffff, 1.2);
+    light.position.set(1,2,3);
+    scene.add(light);
+
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+        'https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb',
+        gltf => {
+            avatar = gltf.scene;
+            avatar.scale.set(1.1,1.1,1.1);
+            scene.add(avatar);
+
+            avatar.traverse(o=>{
+                if(o.isMesh && o.morphTargetDictionary?.mouthOpen!==undefined){
+                    mouthMesh = o;
+                }
+            });
         }
+    );
 
-        // --- 2. INIZIALIZZAZIONE 3D ---
-        async function initAvatar() {
-            try {
-                const node = document.getElementById('avatar-container');
-                
-                head = new TalkingHead(node, {
-                    tts: customTTS, // <--- QUI INSERIAMO IL NOSTRO SISTEMA VOCALE
-                    cameraView: "upper",
-                    softShadows: true
-                });
+    animate();
+}
 
-                // Caricamento Modello
-                await head.showAvatar({
-                    url: AVATAR_URL,
-                    body: "F",
-                    avatarMood: "neutral",
-                    lipsyncLang: 'it'
-                });
+function animate() {
+    requestAnimationFrame(animate);
+    if (avatar) avatar.rotation.y = Math.sin(Date.now()*0.0005)*0.1;
+    renderer.render(scene,camera);
+}
 
-                // Tutto pronto
-                spinner.style.display = 'none';
-                loadText.innerText = "NAIA è pronta.";
-                startBtn.style.display = 'block';
+function startLipSync(){
+    if(!mouthMesh) return;
+    lipSyncInterval = setInterval(()=>{
+        mouthMesh.morphTargetInfluences[
+            mouthMesh.morphTargetDictionary.mouthOpen
+        ] = Math.random()*0.7;
+    },80);
+}
 
-            } catch (error) {
-                console.error("Errore Init 3D:", error);
-                spinner.style.display = 'none';
-                loadText.innerHTML = "Impossibile caricare il 3D.<br>La chat funziona comunque.";
-                startBtn.innerText = "USA SOLO CHAT";
-                startBtn.style.display = 'block';
-            }
-        }
+function stopLipSync(){
+    if(lipSyncInterval) clearInterval(lipSyncInterval);
+    if(mouthMesh){
+        mouthMesh.morphTargetInfluences[
+            mouthMesh.morphTargetDictionary.mouthOpen
+        ] = 0;
+    }
+}
 
-        window.startExperience = async function() {
-            loadOverlay.style.display = 'none';
-            if(head) {
-                try {
-                    await head.audioCtx.resume(); // Sblocca audio
-                    const welcome = "Ciao! Sono NAIA. Sono l'intelligenza artificiale dell'Istituto Boccardi Tiberio. Come posso aiutarti?";
-                    appendMessage(welcome, 'ai');
-                    head.speakText(welcome);
-                } catch(e) { console.log(e); }
-            } else {
-                appendMessage("Ciao! Sono NAIA (Modalità Solo Testo). Chiedimi pure!", 'ai');
-            }
-        };
+initAvatar();
 
-        window.addEventListener('DOMContentLoaded', initAvatar);
+/* ===================== CHAT + VOCE ===================== */
+const synth = window.speechSynthesis;
+const chat = document.getElementById('chat-container');
+const statusDiv = document.getElementById('avatar-status');
 
-        // --- FUNZIONI CHAT ---
-        function appendMessage(text, sender) {
-            const div = document.createElement('div');
-            div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
-            div.innerHTML = text.replace(/\n/g, "<br>");
-            chatContainer.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+function appendMessage(text, sender){
+    const d = document.createElement('div');
+    d.className = `message ${sender}-msg`;
+    d.innerText = text;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+}
 
-        window.quickAsk = function(t) { inputField.value = t; sendToBrain(); }
+function speak(text){
+    if(synth.speaking) synth.cancel();
 
-        window.startDictation = function() {
-            const btn = document.getElementById('btn-mic');
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'it-IT';
-            recognition.start();
-            recognition.onstart = () => { btn.classList.add("mic-active"); inputField.placeholder = "Ti ascolto..."; };
-            recognition.onend = () => { btn.classList.remove("mic-active"); inputField.placeholder = "Scrivi qui..."; if(inputField.value) sendToBrain(); };
-            recognition.onresult = (e) => { inputField.value = e.results[0][0].transcript; };
-        };
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'it-IT';
+    utterance.rate = 0.9;
 
-        // --- 3. IL CERVELLO (PROMPT ORIGINALE REINSERITO) ---
-        window.sendToBrain = async function() {
-            const question = inputField.value.trim();
-            if (!question) return;
+    utterance.onstart = ()=>{
+        statusDiv.innerText="NAIA PARLA...";
+        startLipSync();
+    };
+    utterance.onend = ()=>{
+        stopLipSync();
+        statusDiv.innerText="IN ASCOLTO";
+    };
 
-            if(head) head.stopSpeaking(); // Ferma la voce precedente
+    synth.speak(utterance);
+}
 
-            appendMessage(question, 'user');
-            inputField.value = "";
-            
-            // --- QUI C'È TUTTA LA CONOSCENZA DEL TUO FILE ORIGINALE ---
-            const SYSTEM_INSTRUCTION = `
+/* ===================== STT ===================== */
+function startDictation(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ alert("Usa Chrome"); return; }
+    const r = new SR();
+    r.lang='it-IT';
+    r.start();
+    document.getElementById('btn-mic').classList.add('mic-active');
+    r.onresult=e=>{
+        document.getElementById('chat-input').value=e.results[0][0].transcript;
+    };
+    r.onend=()=>{
+        document.getElementById('btn-mic').classList.remove('mic-active');
+        if(document.getElementById('chat-input').value) sendToBrain();
+    };
+}
+
+/* ===================== OLLAMA + CERVELLO ===================== */
+const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev';
+const MODEL_NAME = 'naia_school';
+
+async function sendToBrain(){
+    const input = document.getElementById('chat-input');
+    const question = input.value;
+    if(!question) return;
+
+    appendMessage(question,'user');
+    input.value='';
+    statusDiv.innerText="ELABORAZIONE...";
+
+    const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
 1. Tu sei NAIA, l'Intelligenza Artificiale avanzata dell'istituto Giovanni Boccardi / Ugo Tiberio di Termoli.
 2. Rispondi sempre in ITALIANO.
@@ -251,48 +340,32 @@ Segreteria: Lun-Sab, ore 11:00 - 13:00.
 - Convitto: Non presente interno, solo strutture private esterne.
 
 Domanda dell'utente: ${question}
-            `;
+            
+`;
 
-            try {
-                const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: MODEL_NAME,
-                        prompt: question, 
-                        system: SYSTEM_INSTRUCTION,
-                        stream: false,
-                        keep_alive: -1,
-                        options: { temperature: 0, num_predict: 500, num_ctx: 4096 }
-                    })
-                });
-                
-                if (!response.ok) throw new Error("Errore Ollama");
-                const data = await response.json();
-                
-                // PULIZIA TESTO PER LETTURA OTTIMALE
-                let cleanText = data.response
-                    .replace(/\*/g, "") // Via gli asterischi
-                    .replace(/[#_]/g, "")
-                    .replace(/\n/g, ". "); // A capo diventa pausa
-                
-                // Lettura corretta siti web e email
-                cleanText = cleanText.replace(/(www\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, (m) => m.replace(/\./g, " punto "));
-                cleanText = cleanText.replace(/@/g, " chiocciola ");
+    const res = await fetch(`${OLLAMA_HOST}/api/generate`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            model:MODEL_NAME,
+            prompt: question,
+            system: SYSTEM_INSTRUCTION,
+            stream:false
+        })
+    });
 
-                appendMessage(cleanText, 'ai');
-                
-                // PARLA
-                if(head) head.speakText(cleanText);
+    const data = await res.json();
+    let cleanText = data.response.replace(/\*/g,"").replace(/\n/g," ");
+    appendMessage(cleanText,'ai');
+    speak(cleanText);
+}
 
-            } catch (error) {
-                console.error(error);
-                appendMessage("Errore di connessione al cervello. Controlla che Ngrok sia attivo.", 'ai');
-            }
-        };
-        
-        inputField.addEventListener("keypress", (e) => { if (e.key === "Enter") sendToBrain(); });
+document.getElementById('chat-input').addEventListener('keypress',e=>{
+    if(e.key==='Enter') sendToBrain();
+});
+</script>
 
-    </script>
 </body>
 </html>
+
+
