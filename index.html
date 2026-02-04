@@ -6,8 +6,16 @@
     <title>NAIA AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+            "talkinghead": "https://cdn.jsdelivr.net/gh/met4citizen/TalkingHead@1.1/modules/talkinghead.mjs"
+        }
+    }
+    </script>
+    
     <style>
         /* --- 1. BASE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -27,35 +35,26 @@
             overflow: hidden;
         }
 
+        /* Contenitore specifico per il canvas 3D */
+        #avatar-container {
+            width: 100%; height: 100%; display: block;
+        }
+        
         .top-info { position: absolute; top: 25px; left: 25px; z-index: 10; }
         .top-info h1 { margin: 0; font-size: 22px; color: white; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .top-info #status { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 600; letter-spacing: 1px; margin-top: 4px; }
 
-        /* --- 3. MODELLO 3D + ANIMAZIONE CSS FORZATA --- */
-        model-viewer#naia-img {
-            width: 100%; height: 115%;
-            background-color: transparent; --poster-color: transparent;
-            transform-origin: center bottom;
-            
-            /* QUESTA È L'ANIMAZIONE CHE GARANTISCE IL MOVIMENTO */
-            animation: breathe-css 4s ease-in-out infinite; 
+        /* Loader Overlay */
+        #loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20;
         }
-
-        /* Simulazione Respiro via CSS (Funziona sempre!) */
-        @keyframes breathe-css {
-            0% { transform: scale(1) translateY(0); }
-            50% { transform: scale(1.02) translateY(-0.5%); } /* Si gonfia leggermente */
-            100% { transform: scale(1) translateY(0); }
-        }
-
-        /* Quando parla rimbalza più velocemente */
-        .speaking-css {
-            animation: talk-css 0.4s ease-in-out infinite alternate !important;
-        }
-        @keyframes talk-css {
-            from { transform: scale(1); }
-            to { transform: scale(1.03); }
-        }
+        .loader { border: 3px solid rgba(255,255,255,0.5); border-top: 3px solid #fff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #start-btn { display: none; padding: 10px 25px; background: white; color: #3b82f6; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
         /* --- 4. CHAT --- */
         #chat-container {
@@ -97,19 +96,12 @@
                 <div id="status">ATTIVA</div>
             </div>
             
-            <model-viewer 
-                id="naia-img" 
-                src="https://api.readyplayer.me/v1/avatars/697fa9a97091d5aa566145fb.glb?pose=A" 
-                camera-controls 
-                disable-zoom 
-                disable-pan 
-                interaction-prompt="none"
-                camera-orbit="-5deg 85deg 3.5m" 
-                camera-target="0m 1.55m 0m"
-                field-of-view="25deg"
-                shadow-intensity="0.5"
-                alt="NAIA Avatar">
-            </model-viewer>
+            <div id="loading-overlay">
+                <div class="loader" id="spinner"></div>
+                <button id="start-btn" onclick="startExperience()">AVVIA ESPERIENZA</button>
+            </div>
+
+            <div id="avatar-container"></div>
         </div>
 
         <div id="chat-container">
@@ -131,29 +123,106 @@
         </div>
     </div>
     
-    <script>
+    <script type="module">
+        import { TalkingHead } from "talkinghead";
         
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
 
+        const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024";
+        
         let voices = [];
         let bestVoice = null;
 
-        // Qui ora "img" si riferisce al tag <model-viewer> grazie all'ID uguale
+        const inputField = document.getElementById('chat-input');
         const img = document.getElementById('naia-img');
         const statusDiv = document.getElementById('status');
         const chatContainer = document.getElementById('chat-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const spinner = document.getElementById('spinner');
+        const startBtn = document.getElementById('start-btn');
+        const micBtn = document.getElementById('btn-mic');
         const synth = window.speechSynthesis;
 
+        let head; // Istanza dell'avatar
+        
         let speechQueue = []; 
+        // --- 1. FUNZIONE TTS CUSTOM (NO GOOGLE KEY RICHIESTA) ---
+        async function customTTS(text) {
+            // Usiamo la voce di Carla (Italiano) via StreamElements
+            try {
+                const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("TTS Error");
+                const blob = await res.blob();
+                return await blob.arrayBuffer(); // Ritorna l'audio per il lip-sync
+            } catch (err) {
+                console.error("TTS Fallito", err);
+                return new ArrayBuffer(0); // Fallback silenzioso
+            }
+        }
+
+        // --- 2. INIZIALIZZAZIONE 3D ---
+        async function initAvatar() {
+            const node = document.getElementById('avatar-container');
+            
+            try {
+                head = new TalkingHead(node, {
+                    tts: customTTS, // Qui assegniamo la nostra funzione custom
+                    cameraView: "upper",
+                    softShadows: true
+                });
+
+                // Caricamento Avatar
+                await head.showAvatar({
+                    url: AVATAR_URL,
+                    body: "F",
+                    avatarMood: "neutral",
+                    lipsyncLang: 'it'
+                });
+
+                // Avatar pronto
+                spinner.style.display = 'none';
+                startBtn.style.display = 'block';
+                statusDiv.innerText = "PRONTA";
+
+            } catch (error) {
+                console.error("Errore 3D:", error);
+                statusDiv.innerText = "ERRORE GRAFICO";
+                spinner.style.display = 'none';
+                // La chat funzionerà comunque
+                appendMessage("Errore caricamento 3D. Puoi comunque scrivermi.", 'ai');
+            }
+        }
+
+        // --- 3. AVVIO (SBLOCCO AUDIO) ---
+        window.startExperience = async function() {
+            loadingOverlay.style.display = 'none';
+            if (head && head.audioCtx) {
+                try {
+                    await head.audioCtx.resume();
+                    const welcome = "Ciao! Sono NAIA. Sono pronta a rispondere alle tue domande.";
+                    appendMessage(welcome, 'ai');
+                    head.speakText(welcome);
+                    statusDiv.innerText = "ATTIVA";
+                } catch(e) { console.log(e); }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', initAvatar);
         
         function appendMessage(text, sender) {
             const div = document.createElement('div');
             div.classList.add('message');
             div.classList.add(sender === 'user' ? 'user-msg' : 'ai-msg');
-            div.innerText = text;
+            div.innerHTML = text.replace(/\n/g, "<br>");
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        window.quickAsk = function(text) {
+            inputField.value = text;
+            sendToBrain();
         }
         
         function speak(text) {
@@ -229,10 +298,10 @@
 
         async function sendToBrain() {
             const inputField = document.getElementById('chat-input');
-            const question = inputField.value;
+            const question = inputField.value.trim();
             if (!question) return;
+            if(head) head.stopSpeaking();
             appendMessage(question, 'user');
-
             // --- INIZIO SYSTEM PROMPT ---
             const SYSTEM_INSTRUCTION = `
 REGOLE FONDAMENTALI (OBBLIGATORIE):
@@ -340,7 +409,6 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             // --- FINE SYSTEM PROMPT ---
 
             statusDiv.innerText = "ELABORAZIONE...";
-            img.style.filter = "grayscale(100%)";
             inputField.value = "";
 
             try {
@@ -379,6 +447,12 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
                 cleanText = cleanText.replace(/\.\s*\./g, "."); 
 
                 appendMessage(cleanText, 'ai');
+                statusDiv.innerText = "ATTIVA";
+                
+                // PARLA E ANIMA
+                if (head) {
+                    head.speakText(cleanText);
+                }
                 
                 img.style.filter = "none";
                 speak(cleanText);
@@ -399,6 +473,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
