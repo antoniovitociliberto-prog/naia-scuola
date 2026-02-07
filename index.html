@@ -226,9 +226,6 @@
     
             utterance.onend = () => {
                 playNextSentence(sentences, index + 1, voiceObj);
-                setTimeout(() => {
-                    playNextSentence(sentences, index + 1, voiceObj);
-                }, 800);
             };
     
             synth.speak(utterance);
@@ -271,12 +268,12 @@ I tuo compito è accogliere gli ospiti e rispondere alle domande sulla scuola.
 SCHEDA INFORMATIVA SCUOLA:
 1. DATI IDENTIFICATIVI E AMMINISTRATIVI
 denominazione Ufficiale, Istituto di Istruzione Superiore Giovanni Boccardi / Ugo Tiberio..
-via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86 0 39, Termoli.. 
-pec (Posta Certificata): CBIS01800L@pec.istruzione.it..
-email istituzionale: CBIS01800L@istruzione.it..
-sito Web: www.iisboccarditiberio.edu.it..
-telefono: 0 8 7 5 8 3 6 5 5..
-segreteria aperta al pubblico da Lunedi a sabato, ore 11:00 - 13:00..
+via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86 0 39, Termoli:
+pec (Posta Certificata): CBIS01800L@pec.istruzione.it:
+email istituzionale: CBIS01800L@istruzione.it:
+sito Web: www.iisboccarditiberio.edu.it:
+telefono: 0 8 7 5 8 3 6 5 5:
+segreteria aperta al pubblico da Lunedi a sabato, ore 11:00 - 13:00
 2. STORIA E IDENTITÀ
 l'istituto nasce dalla fusione di due storiche scuole di Termoli, l'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959) e l'Istituto Tecnico Tecnologico "Ugo Tiberio" (ex Nautico e Geometri)..
 L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità ISO 9001 rilasciata da TUV SUD (Certificato n° 5010014484), fondamentale per il riconoscimento dei titoli marittimi internazionali
@@ -426,6 +423,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
