@@ -226,6 +226,9 @@
     
             utterance.onend = () => {
                 playNextSentence(sentences, index + 1, voiceObj);
+                setTimeout(() => {
+                    playNextSentence(sentences, index + 1, voiceObj);
+                }, 800);
             };
     
             synth.speak(utterance);
@@ -423,6 +426,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
