@@ -17,34 +17,25 @@
     </script>
 
     <style>
-        /* --- STILE IDENTICO AL TUO ORIGINALE --- */
+        /* --- STILE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            margin: 0; font-family: 'Poppins', sans-serif;
-            background-color: #ffffff; height: 100dvh; width: 100vw; overflow: hidden;
-        }
-        #app-frame {
-            width: 100%; height: 100%; display: flex; flex-direction: column; position: relative;
-        }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background-color: #ffffff; height: 100dvh; width: 100vw; overflow: hidden; }
+        #app-frame { width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; }
 
-        /* --- PALCOSCENICO --- */
+        /* PALCOSCENICO */
         #avatar-stage {
             height: 48vh; width: 100%;
             background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
-            position: relative; 
-            overflow: hidden;
+            position: relative; overflow: hidden;
         }
-        
-        #avatar-container {
-            width: 100%; height: 100%; display: block;
-            opacity: 0; transition: opacity 1s; /* Appare dolcemente quando pronto */
-        }
+        #avatar-container { width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1s; }
 
+        /* HEADER */
         .top-info { position: absolute; top: 25px; left: 25px; z-index: 10; pointer-events: none; }
         .top-info h1 { margin: 0; font-size: 22px; color: white; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .top-info #status { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 600; letter-spacing: 1px; margin-top: 4px; }
 
-        /* Loader Overlay */
+        /* LOADER */
         #loading-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.1); backdrop-filter: blur(5px);
@@ -53,10 +44,9 @@
         }
         .loader { border: 3px solid rgba(255,255,255,0.5); border-top: 3px solid #fff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        #start-btn { display: none; padding: 12px 30px; background: white; color: #3b82f6; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 14px; z-index: 100;}
+        #start-btn { display: none; padding: 12px 30px; background: white; color: #3b82f6; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 
-        /* --- CHAT --- */
+        /* CHAT */
         #chat-container {
             flex: 1; background: #ffffff; margin-top: -40px;
             border-top-left-radius: 35px; border-top-right-radius: 35px;
@@ -64,30 +54,23 @@
             overflow-y: auto; display: flex; flex-direction: column; gap: 15px;
             box-shadow: 0 -10px 30px rgba(0,0,0,0.1); z-index: 20;
         }
-        .message {
-            width: fit-content; max-width: 85%; padding: 14px 18px; border-radius: 18px;
-            font-size: 15px; line-height: 1.5; animation: popIn 0.3s ease-out;
-        }
+        .message { width: fit-content; max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; animation: popIn 0.3s ease-out; }
         .ai-msg { align-self: flex-start; margin-right: auto; background: #f3f4f6; color: #333; border-bottom-left-radius: 4px; }
-        .user-msg { align-self: flex-end; margin-left: auto; background: #6366f1; color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        .user-msg { align-self: flex-end; margin-left: auto; background: #6366f1; color: white; border-bottom-right-radius: 4px; }
 
-        /* --- INPUT --- */
+        /* INPUT */
         #suggestions { padding: 0 20px 10px 20px; display: flex; gap: 10px; overflow-x: auto; background: white; }
-        #suggestions::-webkit-scrollbar { display: none; }
-        .chip { background: white; border: 1px solid #e0e7ff; padding: 8px 16px; border-radius: 100px; font-size: 13px; color: #6366f1; white-space: nowrap; cursor: pointer; font-weight: 500; }
-        #input-zone { padding: 15px; background: white; z-index: 30; border-top: 1px solid #f9fafb; padding-bottom: calc(15px + env(safe-area-inset-bottom));}
+        .chip { background: white; border: 1px solid #e0e7ff; padding: 8px 16px; border-radius: 100px; font-size: 13px; color: #6366f1; white-space: nowrap; cursor: pointer; }
+        #input-zone { padding: 15px; background: white; z-index: 30; border-top: 1px solid #f9fafb; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
         .input-wrapper { background: #f3f4f6; padding: 6px; border-radius: 30px; display: flex; align-items: center; gap: 8px; }
         #chat-input { flex: 1; background: transparent; border: none; padding: 12px; font-size: 16px; outline: none; color: #333; }
         .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; }
-        #btn-mic { background: white; color: #6b7280; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #btn-mic { background: white; color: #6b7280; }
         .mic-active { color: #ef4444 !important; animation: pulseRed 1.5s infinite; }
         #btn-send { background: #6366f1; color: white; margin-right: 2px;}
 
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        
-        /* Debug log nascosto ma utile */
-        #debug-log { display: none; }
     </style>
 </head>
 <body>
@@ -102,8 +85,7 @@
             <div id="loading-overlay">
                 <div class="loader" id="spinner"></div>
                 <div id="error-msg" style="color:white; text-align:center; display:none; padding:20px;">
-                    Ops! Errore caricamento avatar.<br>
-                    <small id="error-detail"></small>
+                    Errore. Ricarica la pagina.
                 </div>
                 <button id="start-btn" onclick="startExperience()">CLICCA PER PARLARE</button>
             </div>
@@ -134,9 +116,8 @@
         // --- CONFIGURAZIONE ---
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
-        
-        // 1. URL AVATAR OTTIMIZZATO (LOD=1 riduce il peso, ARKit abilita le labbra)
-        const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024&lod=1";
+        // Usa lod=1 per renderlo leggero e prevenire "Errore 3D"
+        const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&lod=1";
 
         const chatContainer = document.getElementById('chat-container');
         const inputField = document.getElementById('chat-input');
@@ -146,101 +127,63 @@
         const startBtn = document.getElementById('start-btn');
         const micBtn = document.getElementById('btn-mic');
         const avatarContainer = document.getElementById('avatar-container');
-        const errorMsg = document.getElementById('error-msg');
-        const errorDetail = document.getElementById('error-detail');
 
-        let head; // Istanza dell'avatar
+        let head;
 
-        // --- 2. TTS CUSTOM (Voce Italiana StreamElements) ---
-        async function customTTS(text) {
-            try {
-                // Sostituisco spazi e caratteri speciali per l'URL
-                const safeText = encodeURIComponent(text);
-                const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${safeText}`;
-                
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("TTS Network Error");
-                
-                const blob = await res.blob();
-                return await blob.arrayBuffer(); 
-            } catch (err) {
-                console.error("TTS Fallito:", err);
-                // Ritorna buffer vuoto per non bloccare l'app
-                return new ArrayBuffer(0); 
-            }
-        }
-
-        // --- 3. INIZIALIZZAZIONE 3D ---
         async function initAvatar() {
             try {
-                // Configurazione TalkingHead
+                // --- SETUP AVATAR ---
+                // ttsEndpoint: null è FONDAMENTALE per evitare l'errore "Google-compliant"
                 head = new TalkingHead(avatarContainer, {
-                    tts: customTTS, 
-                    cameraView: "upper", // Inquadratura busto
-                    cameraDistance: 1.8,
-                    softShadows: true,
-                    ambientLightIntensity: 0.8,
-                    spotLightIntensity: 0.5
+                    ttsEndpoint: null, 
+                    cameraView: "upper",
+                    cameraDistance: 1.8
                 });
 
-                // Caricamento effettivo
+                // Caricamento Modello
                 await head.showAvatar({
                     url: AVATAR_URL,
-                    body: "F", // Corpo femminile
+                    body: "F",
                     avatarMood: "neutral",
-                    lipsyncLang: 'it' // Sincronizzazione labiale italiano
+                    lipsyncLang: 'it' 
                 });
 
-                // Se arriva qui, è andato tutto bene
+                // Tutto ok
                 spinner.style.display = 'none';
                 startBtn.style.display = 'block';
                 statusDiv.innerText = "PRONTA";
                 avatarContainer.style.opacity = 1;
 
             } catch (error) {
-                console.error("ERRORE CRITICO 3D:", error);
-                
-                // Mostra errore all'utente invece di bloccarsi
+                console.error("ERRORE:", error);
                 spinner.style.display = 'none';
-                errorMsg.style.display = 'block';
-                errorDetail.innerText = error.message || "Impossibile caricare il modello 3D.";
-                statusDiv.innerText = "ERRORE GRAFICO";
-                
-                // Fallback: permetti l'uso della chat anche senza 3D
-                appendMessage("Il sistema grafico 3D ha riscontrato un problema, ma posso comunque chattare con te.", 'ai');
+                document.getElementById('error-msg').style.display = 'block';
+                document.getElementById('error-msg').innerText = "Errore caricamento: " + error.message;
             }
         }
 
-        // --- 4. START EXPERIENCE (Click utente necessario per l'audio) ---
         window.startExperience = async function() {
             loadingOverlay.style.opacity = 0;
             setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
 
             if (head) {
                 try {
-                    // Sblocca AudioContext
-                    if(head.audioCtx.state === 'suspended') {
-                        await head.audioCtx.resume();
-                    }
-                    
-                    const welcome = "Ciao! Sono NAIA. Come posso aiutarti oggi?";
+                    // Sblocca audio
+                    head.start(); 
+                    const welcome = "Ciao! Sono NAIA. Come posso aiutarti?";
                     appendMessage(welcome, 'ai');
                     head.speakText(welcome);
                     statusDiv.innerText = "ATTIVA";
-                } catch(e) { 
-                    console.log("Errore Audio Start:", e); 
-                }
+                } catch(e) { console.log(e); }
             }
         };
 
-        // Avvia caricamento al load della pagina
         window.addEventListener('DOMContentLoaded', initAvatar);
 
-        // --- FUNZIONI CHAT & UI (INVARIATE) ---
+        // --- FUNZIONI CHAT ---
         function appendMessage(text, sender) {
             const div = document.createElement('div');
-            div.classList.add('message');
-            div.classList.add(sender === 'user' ? 'user-msg' : 'ai-msg');
+            div.classList.add('message', sender === 'user' ? 'user-msg' : 'ai-msg');
             div.innerHTML = text.replace(/\n/g, "<br>");
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -253,28 +196,20 @@
 
         window.startDictation = function() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert("Browser non supportato per la voce"); return; }
-            
+            if (!SpeechRecognition) return;
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
             recognition.start();
-
             recognition.onstart = function() { micBtn.classList.add("mic-active"); };
-            recognition.onend = function() { 
-                micBtn.classList.remove("mic-active"); 
-                if(inputField.value) sendToBrain(); 
-            };
+            recognition.onend = function() { micBtn.classList.remove("mic-active"); if(inputField.value) sendToBrain(); };
             recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
         }
 
-        // --- 5. LOGICA CERVELLO (SYSTEM PROMPT ORIGINALE) ---
         window.sendToBrain = async function() {
             const question = inputField.value.trim();
             if (!question) return;
 
-            // Stop se sta parlando
             if(head) head.stopSpeaking();
-
             appendMessage(question, 'user');
             inputField.value = "";
             statusDiv.innerText = "STO PENSANDO...";
@@ -449,6 +384,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
