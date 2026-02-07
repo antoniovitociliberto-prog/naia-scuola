@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAIA</title>
+    <title>NAIA - 3D Assistant</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -15,7 +15,7 @@
         body {
             margin: 0;
             font-family: 'Poppins', sans-serif;
-            background-color: #ffffff;
+            background-color: #f4f7f6;
             height: 100dvh;
             width: 100vw;
             overflow: hidden;
@@ -24,65 +24,47 @@
         #app-frame {
             width: 100%;
             height: 100%;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
-        /* --- 2. AVATAR STAGE (PARTE SUPERIORE) --- */
-        #avatar-stage {
-            /* Occupa il 45% dello schermo */
-            height: 45vh; 
+        /* --- 2. AREA AVATAR (Ampliata) --- */
+        #avatar-container {
             width: 100%;
-            /* Sfondo sfumato dietro l'avatar */
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            height: 40vh; /* L'avatar occupa il 40% dell'altezza */
+            background: radial-gradient(circle, #ffffff 0%, #d1d5db 100%);
             position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end; /* Allinea il modello in basso nel suo box */
-            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
         }
 
-        /* Titolo e Stato sovrapposti all'avatar in alto a sinistra */
-        .top-info {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 10;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .top-info h1 { margin: 0; font-size: 20px; color: white; font-weight: 600; }
-        .top-info #status { font-size: 12px; color: rgba(255,255,255,0.9); font-weight: 500; letter-spacing: 1px; text-transform: uppercase; margin-top: 5px;}
-
-        /* STILE DEL MODELLO 3D */
-        model-viewer#naia-img {
-            width: 100%; 
+        model-viewer {
+            width: 100%;
             height: 100%;
-            background-color: transparent; /* Importante: trasparente! */
-            --poster-color: transparent;
+            --glow-color: rgba(37, 99, 235, 0.1);
         }
 
-        /* --- 3. CHAT AREA (PARTE INFERIORE) --- */
+        .header-info {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        h1 { margin: 0; font-size: 18px; color: #333; font-weight: 600; text-shadow: 0 1px 2px white; }
+        #status { font-size: 11px; color: #007bff; font-weight: 700; letter-spacing: 1px; }
+
+        /* --- 3. CHAT AREA (Rimpicciolita) --- */
         #chat-container {
-            /* Occupa lo spazio rimanente */
-            flex: 1; 
-            background: #ffffff;
-            
-            /* Effetto "Foglio" che copre la parte bassa dell'avatar */
-            margin-top: -30px; 
-            border-top-left-radius: 30px;
-            border-top-right-radius: 30px;
-            
-            padding: 25px 15px;
-            padding-bottom: calc(90px + env(safe-area-inset-bottom));
-            
+            flex: 1;
+            padding: 15px;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-            z-index: 5; /* Sta sopra l'avatar stage */
+            background: rgba(255,255,255,0.3);
         }
 
         .message {
@@ -91,149 +73,113 @@
             padding: 12px 18px;
             border-radius: 18px;
             font-size: 15px;
-            line-height: 1.5;
+            line-height: 1.4;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
             animation: popIn 0.3s ease;
         }
 
-        .ai-msg {
-            align-self: flex-start; margin-right: auto;
-            background: #f0f2f5; color: #333;
-            border-bottom-left-radius: 4px; 
-        }
+        .ai-msg { align-self: flex-start; background: white; color: #444; border: 1px solid #e0e0e0; border-bottom-left-radius: 4px; }
+        .user-msg { align-self: flex-end; background: #2563eb; color: white; border-bottom-right-radius: 4px; }
 
-        .user-msg {
-            align-self: flex-end; margin-left: auto;
-            background: #2563eb; color: white;
-            border-bottom-right-radius: 4px;
-        }
-
-        /* Animazione Speaking: un leggero "bounce" o scala invece del bordo colorato */
-        .speaking { animation: gentleBounce 1s infinite ease-in-out; }
-        .idle { filter: brightness(1); }
-        
-        @keyframes gentleBounce { 
-            0%, 100% { transform: translateY(0); } 
-            50% { transform: translateY(-3px); } 
-        }
-
-        /* --- 4. SUGGERIMENTI --- */
+        /* --- 4. INPUT E CHIPS --- */
         #suggestions {
-            /* Spostati dentro il flusso o sopra l'input */
-            padding: 10px 15px;
-            display: flex; gap: 10px; overflow-x: auto;
-            background: white; border-top: 1px solid #f0f0f0;
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
             white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
+            -ms-overflow-style: none; scrollbar-width: none;
         }
-        /* Nascondi scrollbar suggerimenti */
         #suggestions::-webkit-scrollbar { display: none; }
 
         .chip {
-            background: #f0f7ff; border: 1px solid #cce4ff;
-            padding: 8px 15px; border-radius: 20px;
-            font-size: 13px; color: #2563eb;
-            cursor: pointer; font-weight: 500;
-        }
-        
-        /* --- 5. INPUT BAR --- */
-        #input-zone {
-            padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
-            background: white; 
-            display: flex; align-items: center; justify-content: center;
-            gap: 10px; z-index: 20;
+            background: white; border: 1px solid #2563eb; padding: 8px 15px;
+            border-radius: 20px; font-size: 13px; color: #2563eb; cursor: pointer;
         }
 
-        .input-wrapper {
-            width: 100%; max-width: 900px;
-            display: flex; align-items: center; gap: 8px;
-            background: #f3f4f6;
-            padding: 5px; border-radius: 30px;
+        #input-zone {
+            padding: 10px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            background: white;
+            display: flex;
+            justify-content: center;
         }
+
+        .input-wrapper { width: 100%; max-width: 600px; display: flex; gap: 8px; }
 
         #chat-input {
-            flex: 1; background: transparent; border: none;
-            padding: 12px 15px;
-            font-size: 15px; outline: none; color: #333;
+            flex: 1; background: #f3f4f6; border: none; padding: 12px 20px;
+            border-radius: 25px; font-size: 15px; outline: none;
         }
 
         .icon-btn {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; transition: 0.2s; flex-shrink: 0;
+            width: 45px; height: 45px; border-radius: 50%; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; transition: 0.2s;
         }
 
-        #btn-mic { background: white; color: #555; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .mic-active { color: #ef4444 !important; animation: pulseRed 1.5s infinite; }
-        
-        #btn-send { background: #2563eb; color: white; margin-right: 2px;}
+        #btn-mic { background: #f3f4f6; color: #555; }
+        .mic-active { background: #ef4444 !important; color: white !important; animation: pulseRed 1.5s infinite; }
+        #btn-send { background: #2563eb; color: white; }
 
-        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
+        @keyframes popIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
 </head>
 <body>
 
     <div id="app-frame">
-        <div id="avatar-stage">
-            <div class="top-info">
-                <h1>NAIA</h1>
+        <div id="avatar-container">
+            <div class="header-info">
+                <h1>NAIA School Assistant</h1>
                 <div id="status">IN ASCOLTO</div>
             </div>
             
             <model-viewer 
-                id="naia-img" 
-                class="idle"
-                src="https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb" 
-                camera-controls 
-                disable-zoom 
-                disable-pan
-                interaction-prompt="none"
-                camera-orbit="0deg 85deg 3.5m" 
-                camera-target="0m 1.35m 0m"
+                id="naia-avatar"
+                src="https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb"
+                camera-controls
+                disable-zoom
+                auto-rotate
+                rotation="0deg 0deg 0deg"
+                camera-orbit="0deg 75deg 2m"
                 field-of-view="30deg"
-                shadow-intensity="1"
-                shadow-softness="1"
-                alt="NAIA Avatar 3D">
+                environment-image="neutral"
+                shadow-intensity="1">
             </model-viewer>
         </div>
 
         <div id="chat-container">
             <div class="message ai-msg">
-                Ciao! 👋 Sono NAIA. Come posso aiutarti oggi?
+                Ciao! 👋 Sono NAIA, il tuo assistente 3D. Come posso aiutarti oggi?
             </div>
         </div>
         
         <div id="suggestions">
-            <div class="chip" onclick="quickAsk('Indirizzi studio')">📚 Indirizzi</div>
-            <div class="chip" onclick="quickAsk('Contatti segreteria')">📞 Contatti</div>
-            <div class="chip" onclick="quickAsk('Dove sei?')">📍 Posizione</div>
-            <div class="chip" onclick="quickAsk('Chi è il preside?')">🎓 Preside</div>
+            <div class="chip" onclick="quickAsk('Quali sono gli indirizzi?')">📚 Indirizzi</div>
+            <div class="chip" onclick="quickAsk('Dammi i contatti')">📞 Contatti</div>
+            <div class="chip" onclick="quickAsk('Dove si trova la scuola?')">📍 Posizione</div>
+            <div class="chip" onclick="quickAsk('Chi è il dirigente?')">🎓 Preside</div>
         </div>
 
         <div id="input-zone">
             <div class="input-wrapper">
                 <button id="btn-mic" class="icon-btn" onclick="startDictation()">🎙️</button>
-                <input type="text" id="chat-input" placeholder="Scrivi qui..." autocomplete="off">
+                <input type="text" id="chat-input" placeholder="Chiedi a NAIA..." autocomplete="off">
                 <button id="btn-send" class="icon-btn" onclick="sendToBrain()">➤</button>
             </div>
         </div>
     </div>
     
     <script>
-        // --- STESSO CODICE JAVASCRIPT DI PRIMA ---
-        // L'unica differenza è che non ci sono più classi .header-text da aggiornare
-        // perché ho spostato lo status dentro .top-info
-        
+        // --- IL CERVELLO RIMANE INVARIATO ---
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
 
-        const img = document.getElementById('naia-img');
         const statusDiv = document.getElementById('status');
         const chatContainer = document.getElementById('chat-container');
         const synth = window.speechSynthesis;
-        let voices = [];
+        const avatar = document.getElementById('naia-avatar');
 
         function appendMessage(text, sender) {
             const div = document.createElement('div');
@@ -241,17 +187,17 @@
             div.classList.add(sender === 'user' ? 'user-msg' : 'ai-msg');
             div.innerText = text;
             chatContainer.appendChild(div);
-            // Scroll automatico
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
         
-        // --- FUNZIONI DI SPEAKING (INVARIATE) ---
         function speak(text) {
             if (synth.speaking) synth.cancel();
             const allVoices = synth.getVoices();
             const itVoices = allVoices.filter(v => v.lang.includes("it"));
             const femaleVoice = itVoices.find(v => v.name.includes("Google")) 
                              || itVoices.find(v => v.name.includes("Elsa")) 
+                             || itVoices.find(v => v.name.includes("Alice"))
+                             || itVoices.find(v => v.name.includes("Federica"))
                              || itVoices[0];
             const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
             playNextSentence(sentences, 0, femaleVoice);
@@ -259,33 +205,37 @@
 
         function playNextSentence(sentences, index, voiceObj) {
             if (index >= sentences.length) {
-                if(statusDiv) statusDiv.innerText = "IN ASCOLTO";
-                if(img) { img.classList.remove('speaking'); img.classList.add('idle'); }
+                statusDiv.innerText = "IN ASCOLTO";
                 return;
             }
+    
             const textToSay = sentences[index].trim();
-            if(!textToSay) { playNextSentence(sentences, index + 1, voiceObj); return; }
+            if(!textToSay) {
+                playNextSentence(sentences, index + 1, voiceObj);
+                return;
+            }
     
             const utterance = new SpeechSynthesisUtterance(textToSay);
             if (voiceObj) utterance.voice = voiceObj;
-            utterance.lang = 'it-IT'; utterance.rate = 0.9; 
+            utterance.lang = 'it-IT';
+            utterance.rate = 0.9; 
     
             utterance.onstart = () => {
-                if(img) { img.classList.remove('idle'); img.classList.add('speaking'); }
-                if(statusDiv) statusDiv.innerText = "NAIA PARLA...";
+                statusDiv.innerText = "NAIA PARLA...";
             };
-            utterance.onend = () => { playNextSentence(sentences, index + 1, voiceObj); };
-            utterance.onerror = () => { playNextSentence(sentences, index + 1, voiceObj); };
+    
+            utterance.onend = () => {
+                playNextSentence(sentences, index + 1, voiceObj);
+            };
     
             synth.speak(utterance);
         }
         
-        // --- RICOSCIMENTO VOCALE (INVARIATO) ---
         function startDictation() {
             const btnMic = document.getElementById('btn-mic');
             const inputField = document.getElementById('chat-input');
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert("Usa Chrome/Safari"); return; }
+            if (!SpeechRecognition) { alert("Usa Chrome o Safari"); return; }
             const recognition = new SpeechRecognition();
             recognition.lang = 'it-IT';
             recognition.start();
@@ -295,7 +245,6 @@
             recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
         }
 
-        // --- COMUNICAZIONE CON OLLAMA (INVARIATO) ---
         async function sendToBrain() {
             const inputField = document.getElementById('chat-input');
             const question = inputField.value;
@@ -447,20 +396,11 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
 
                 appendMessage(cleanText, 'ai');
                 statusDiv.innerText = "ATTIVA";
-                
-                // PARLA E ANIMA
-                if (head) {
-                    head.speakText(cleanText);
-                }
-                
-                img.style.filter = "none";
                 speak(cleanText);
 
             } catch (error) {
                 console.error(error);
-                img.style.filter = "none";
                 statusDiv.innerText = "ERRORE DI RETE";
-                alert("Errore di connessione. Controlla Ngrok!");
             }
         }
         
@@ -472,6 +412,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
