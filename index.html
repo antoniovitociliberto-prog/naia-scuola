@@ -411,9 +411,35 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
             document.getElementById('chat-input').value = text;
             sendToBrain();
         }
+
+        // --- CONTROLLO REMOTO (Tasti SU e GIÙ) ---
+        window.addEventListener('keydown', (e) => {
+            
+            // 1. TASTO SU (Freccia Su o Pagina Su) -> ATTIVA IL MICROFONO
+            if (e.key === "ArrowUp" || e.key === "PageUp") {
+                e.preventDefault(); // Blocca lo scroll della pagina
+                console.log("Comando: PARLA");
+                startDictation();
+            }
+
+            // 2. TASTO GIÙ (Freccia Giù o Pagina Giù) -> ZITTISCE NAIA
+            if (e.key === "ArrowDown" || e.key === "PageDown") {
+                e.preventDefault(); // Blocca lo scroll della pagina
+                console.log("Comando: STOP");
+                
+                if (synth.speaking) {
+                    synth.cancel(); // Interrompe la voce
+                    statusDiv.innerText = "INTERROTTA";
+                    // Se avessi ancora riferimenti all'avatar 2D:
+                    if(typeof img !== 'undefined') img.classList.remove('speaking');
+                }
+            }
+        });
+        
     </script>
 </body>
 </html>
+
 
 
 
