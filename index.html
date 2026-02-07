@@ -199,7 +199,13 @@
                              || itVoices.find(v => v.name.includes("Alice"))
                              || itVoices.find(v => v.name.includes("Federica"))
                              || itVoices[0];
-            const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
+            //const sentences = text.match(/[^.?!]+[.?!]*/g) || [text];
+            const sentences = text.split(/([.?!:;]+)/).reduce((acc, val, i, arr) => {
+                if (i % 2 === 0) {
+                    if (val.trim()) acc.push(val.trim() + (arr[i+1] || ""));
+                    }
+                return acc;
+                }, []);
             playNextSentence(sentences, 0, femaleVoice);
         }
 
@@ -268,8 +274,11 @@ I tuo compito è accogliere gli ospiti e rispondere alle domande sulla scuola.
 SCHEDA INFORMATIVA SCUOLA:
 1. DATI IDENTIFICATIVI E AMMINISTRATIVI
 denominazione Ufficiale, Istituto di Istruzione Superiore Giovanni Boccardi / Ugo Tiberio..
-via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86 0 39, Termoli,
-pec (Posta Certificata): CBIS01800L@pec.istruzione.it, email istituzionale: CBIS01800L@istruzione.it, sito Web: www.iisboccarditiberio.edu.it, telefono: 0 8 7 5 8 3 6 5 5..
+via o indirizzo della sede Centrale, è Via Alcide De Gasperi, 30, 86 0 39, Termoli;
+pec (Posta Certificata): CBIS01800L@pec.istruzione.it;
+email istituzionale: CBIS01800L@istruzione.it; 
+sito Web: www.iisboccarditiberio.edu.it; 
+telefono: 0 8 7 5 8 3 6 5 5;
 La segreteria è aperta al pubblico dal Lunedi al sabato, ore 11:00 - 13:00
 2. STORIA E IDENTITÀ
 l'istituto nasce dalla fusione di due storiche scuole di Termoli, l'Istituto Tecnico Economico "Giovanni Boccardi" (ex Ragioneria, fondato nel 1959) e l'Istituto Tecnico Tecnologico "Ugo Tiberio" (ex Nautico e Geometri)..
@@ -277,17 +286,17 @@ L'indirizzo Trasporti e Logistica (Nautico) vanta la Certificazione di Qualità 
 3. OFFERTA FORMATIVA DETTAGLIATA
 l'istituto offre percorsi diurni (5 anni) e percorsi serali (istruzione per adulti)
 per il settore tecnologico Ugo Tiberio abbiamo a disposizione i seguenti corsi di studio:
-indirizzo c a i m, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina..
-indirizzo c m n, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani)..
-indirizzo logistica, Gestione dei trasporti intermodali terra, mare e aria..
-indirizzo c a t, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica..
+indirizzo c a i m, Conduzione Apparati e Impianti Marittimi: Formazione per Ufficiali di Macchina;
+indirizzo c m n, Conduzione del Mezzo Navale: Formazione per Ufficiali di Coperta (Capitani);
+indirizzo logistica, Gestione dei trasporti intermodali terra, mare e aria;
+indirizzo c a t, Costruzioni, Ambiente e Territorio - ex Geometri: Progettazione edilizia, topografia, estimo, sicurezza cantieri, riqualificazione energetica;
 per il settore economico Giovanni Boccardi abbiamo a disposizione i seguenti corsi di studio:
-indirizzo a f m, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative..
-indirizzi s i a, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno), si studia informatica gestionale, database, coding applicato all'economia..
-indirizzo r i m, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno), studio di tre lingue straniere, geopolitica e relazioni internazionali..
-indirizzo turismo, Percorso specifico per l'impresa turistica, materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere..
-corsi SERALI Istruzione per Adulti..
-percorsi abbreviati per lavoratori o chi vuole riprendere gli studi, attivi sia per l'indirizzo Economico che per il Tecnologico, in base al numero di iscritti..
+indirizzo a f m, Amministrazione, Finanza e Marketing: Il corso "classico". Competenze gestionali, fiscali e amministrative;
+indirizzi s i a, Sistemi Informativi Aziendale: Curvatura informatica dell'AFM (dal 3° anno), si studia informatica gestionale, database, coding applicato all'economia;
+indirizzo r i m, Relazioni Internazionali per il Marketing: Curvatura linguistica dell'AFM (dal 3° anno), studio di tre lingue straniere, geopolitica e relazioni internazionali;
+indirizzo turismo, Percorso specifico per l'impresa turistica, materie caratterizzanti: Discipline turistiche e aziendali, Arte e Territorio, tre lingue straniere;
+corsi SERALI Istruzione per Adulti;
+percorsi abbreviati per lavoratori o chi vuole riprendere gli studi, attivi sia per l'indirizzo Economico che per il Tecnologico, in base al numero di iscritti;
 4. QUADRO ORARIO DISCIPLINE
 1 Opzione caim ufficiali di macchina:
 italiano 4 ore settimanali per l'intera durata del percorso di studi, storia 2 ore settimanali per l'intera durata del percorso di studi, 
@@ -420,6 +429,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
