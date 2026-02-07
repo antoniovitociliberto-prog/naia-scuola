@@ -38,6 +38,7 @@
         /* Contenitore specifico per il canvas 3D */
         #avatar-container {
             width: 100%; height: 100%; display: block;
+            opacity: 0; transition: opacity 1s;
         }
         
         .top-info { position: absolute; top: 25px; left: 25px; z-index: 10; }
@@ -49,12 +50,12 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 20;
+            z-index: 20; transition: opacity 0.5s;
         }
         .loader { border: 3px solid rgba(255,255,255,0.5); border-top: 3px solid #fff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        #start-btn { display: none; padding: 10px 25px; background: white; color: #3b82f6; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        #start-btn { display: none; padding: 12px 30px; background: white; color: #3b82f6; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
         /* --- 4. CHAT --- */
         #chat-container {
@@ -85,6 +86,8 @@
 
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulseRed { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        #debug-log { display: none; }
     </style>
 </head>
 <body>
@@ -98,9 +101,13 @@
             
             <div id="loading-overlay">
                 <div class="loader" id="spinner"></div>
-                <button id="start-btn" onclick="startExperience()">AVVIA ESPERIENZA</button>
+                <div id="error-msg" style="color:white; text-align:center; display:none; padding:20px;">
+                    Ops! Errore caricamento avatar.<br>
+                    <small id="error-detail"></small>
+                </div>
+                <button id="start-btn" onclick="startExperience()">CLICCA PER PARLARE</button>
             </div>
-
+            
             <div id="avatar-container"></div>
         </div>
 
@@ -129,10 +136,7 @@
         const OLLAMA_HOST = 'https://kandra-superpious-kanesha.ngrok-free.dev'; 
         const MODEL_NAME = "naia_school"; 
 
-        const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024";
-        
-        let voices = [];
-        let bestVoice = null;
+        const AVATAR_URL = "https://models.readyplayer.me/697fa9a97091d5aa566145fb.glb?morphTargets=ARKit&textureAtlas=1024&lod=1";
 
         const inputField = document.getElementById('chat-input');
         const img = document.getElementById('naia-img');
@@ -151,7 +155,8 @@
         async function customTTS(text) {
             // Usiamo la voce di Carla (Italiano) via StreamElements
             try {
-                const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${encodeURIComponent(text)}`;
+                const safeText = encodeURIComponent(text);
+                const url = `https://api.streamelements.com/kappa/v2/speech?voice=Carla&text=${safeText}`;
                 const res = await fetch(url);
                 if (!res.ok) throw new Error("TTS Error");
                 const blob = await res.blob();
@@ -170,7 +175,10 @@
                 head = new TalkingHead(node, {
                     tts: customTTS, // Qui assegniamo la nostra funzione custom
                     cameraView: "upper",
-                    softShadows: true
+                    cameraDistance: 1.8,
+                    softShadows: true,
+                    ambientLightIntensity: 0.8,
+                    spotLightIntensity: 0.5
                 });
 
                 // Caricamento Avatar
@@ -185,13 +193,16 @@
                 spinner.style.display = 'none';
                 startBtn.style.display = 'block';
                 statusDiv.innerText = "PRONTA";
-
+                avatarContainer.style.opacity = 1;
             } catch (error) {
                 console.error("Errore 3D:", error);
-                statusDiv.innerText = "ERRORE GRAFICO";
                 spinner.style.display = 'none';
-                // La chat funzionerà comunque
-                appendMessage("Errore caricamento 3D. Puoi comunque scrivermi.", 'ai');
+                errorMsg.style.display = 'block';
+                errorDetail.innerText = error.message || "Impossibile caricare il modello 3D.";
+                statusDiv.innerText = "ERRORE GRAFICO";
+                
+                // Fallback: permetti l'uso della chat anche senza 3D
+                appendMessage("Il sistema grafico 3D ha riscontrato un problema, ma posso comunque chattare con te.", 'ai');
             }
         }
 
@@ -207,8 +218,30 @@
                     statusDiv.innerText = "ATTIVA";
                 } catch(e) { console.log(e); }
             }
+        }
+
+        window.startExperience = async function() {
+            loadingOverlay.style.opacity = 0;
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
+
+            if (head) {
+                try {
+                    // Sblocca AudioContext
+                    if(head.audioCtx.state === 'suspended') {
+                        await head.audioCtx.resume();
+                    }
+                    
+                    const welcome = "Ciao! Sono NAIA. Come posso aiutarti oggi?";
+                    appendMessage(welcome, 'ai');
+                    head.speakText(welcome);
+                    statusDiv.innerText = "ATTIVA";
+                } catch(e) { 
+                    console.log("Errore Audio Start:", e); 
+                }
+            }
         };
 
+        // Avvia caricamento al load della pagina
         window.addEventListener('DOMContentLoaded', initAvatar);
         
         function appendMessage(text, sender) {
@@ -223,6 +256,22 @@
         window.quickAsk = function(text) {
             inputField.value = text;
             sendToBrain();
+        }
+        
+        window.startDictation = function() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("Browser non supportato per la voce"); return; }
+            
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'it-IT';
+            recognition.start();
+
+            recognition.onstart = function() { micBtn.classList.add("mic-active"); };
+            recognition.onend = function() { 
+                micBtn.classList.remove("mic-active"); 
+                if(inputField.value) sendToBrain(); 
+            };
+            recognition.onresult = function(e) { inputField.value = e.results[0][0].transcript; };
         }
         
         function speak(text) {
@@ -473,6 +522,7 @@ A: No. Tutti i pagamenti verso la scuola (tasse, gite, assicurazione) devono pas
     </script>
 </body>
 </html>
+
 
 
 
